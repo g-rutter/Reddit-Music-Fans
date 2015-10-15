@@ -2,20 +2,20 @@
 # -*- coding: utf-8 -*-
 
 import sqlite3
-from subreddit_lists import subreddit_genres, genres, music_subreddits
+from subreddits import subreddit_genres, genres, music_subreddits
 import numpy as np
 from scipy.sparse import coo_matrix
 
 """
 Functions to produce an (X,Y) dataset where the samples are reddit users, the
 outcomes are the category of 'fan' the user is (one of classical, hiphop, 
-rockmetal, or electronic, in the example subreddit list) and the observables
-are which offtopic subreddits the user has posted in.
+rockmetal, or electronic) and the predictors are which offtopic subreddits the
+user has posted in.
 """
 
 # TODO: Potential improvements
 # - Cleverer offtopic subreddit selection in get_offtopic_subreddits
-# - SQL enhancements. Creating a smaller temp table or indexing on subreddit.
+# - SQL enhancements. e.g. creating a smaller temp table.
 
 def get_dataset_SQL(db_file, table_name, fans_limit=50000, offtopic_limit=2000):
     """
@@ -53,7 +53,7 @@ def get_dataset_SQL(db_file, table_name, fans_limit=50000, offtopic_limit=2000):
     nonmusic_subreddits = get_offtopic_subreddits(c, table_name, all_fans, music_subreddits, LIMIT=offtopic_limit)
     print ( "" )
 
-    print ( "Creating sparse array of observations for each user." )
+    print ( "Creating sparse array of predictors for each user." )
     n_samples = len(all_fans)
     X = get_array_user_subreddits(c, table_name, all_fans, nonmusic_subreddits)
     print ( "" )
@@ -146,7 +146,6 @@ def get_offtopic_subreddits(c, table_name, all_fans, excluded_subreddits, LIMIT=
 ##############################################################
 
 def get_array_user_subreddits(c, table_name, all_fans, offtopic_subreddits):
-
     n_samples = len(all_fans)
     n_features = len(offtopic_subreddits)
     i_fans = []

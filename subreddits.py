@@ -38,12 +38,12 @@ subreddit_genres = {
 
         'BetweenTheBuriedAndMe', 'TheFence', 'Nirvana', 'greenday',
         'GunsNRoses', 'Megadeth', 'Metallica', 'Muse', 'Opeth', 'Slayer',
-        'Slipknot',
+        'Slipknot', 'qotsa', 'Foofighters', 'arcticmonkeys',
     ),
 
     'electronic': (
         'acidhouse', 'ambientmusic', 'AStateOfTrance', 'AtmosphericDnB',
-        'boogiemusic', 'breakbeat', 'breakcore', 'brostep',
+        'boogiemusic', 'breakbeat', 'breakcore', 'brostep', 'chicagoEDM',
         'chicagohouse', 'chillout', 'Chipbreak', 'chiptunes', 'complextro',
         'darkstep', 'deephouse', 'DnB', 'dnbproduction', 'dubstep', 'EDM',
         'electronicdancemusic', 'ElectronicJazz', 'ElectronicBlues',
@@ -64,7 +64,7 @@ subreddit_genres = {
         'electricdaisycarnival', 'Monstercat', 'MovementDEMF',
 
         'skrillex', 'deadmau5', 'knifeparty', 'ericprydz',
-        'CounterPointFestival', 'DaftPunk', 
+        'CounterPointFestival', 'DaftPunk', 'EDCNY', 'Zomboy',
     ),
 
     'hiphop' : (
@@ -85,7 +85,10 @@ music_subreddits = tuple( [subreddit for sublist in subreddit_genres.values() fo
     'electrohiphop', 'raprock', 'industrialmetal', 'industrialmusic',
     'synthrock', 'headphones', 'nin', 'violinist', 'abletonlive', 'funk',
     'futurebass', 'altrap', 'trapmuzik', 'trap', 'trapproduction',
-    'nightwish',
+    'nightwish', 'Savant', 'lapfoxtrax', 'wakarusa', 'LightningInABottle',
+    'TomorrowWorld', 'Tomorrowland', 'MonstercatCringe', 'themonsterkittens',
+    'subgenreid', 'burial', 'porterrobinson', 'outrun',
+
 
     # Manually excluded subreddits
     'Musicthemetime', 'SundayMorningMusic', 'ChristianMusic', 'BattleMusic',
@@ -103,7 +106,9 @@ music_subreddits = tuple( [subreddit for sublist in subreddit_genres.values() fo
     'leakthreads', 'AdvancedProduction', 'edmproduction', 'TaylorSwift', 
     'donaldglover', 'freshalbumart', 'modular', 'Coachella', 'DJsCirclejerk',
     'Lollapalooza', 'bisco', 'maschine', 'TheWeeknd', 'livesound',
-    'deathgrips',
+    'deathgrips', 'edmprodcirclejerk', 'TameImpala', 'macdemarco',
+    'guitarporn', 'SakuraGakuin', 'guitars', 'avengedsevenfold',
+    'Dreamtheatre', 'Sufjan',
 
     # All 'misc' music subreddits
     '2010sMusic', '2000sMusic', '90smusic', '80smusic', '70smusic', '60sMusic',
@@ -141,7 +146,7 @@ music_subreddits = tuple( [subreddit for sublist in subreddit_genres.values() fo
     'runningmusic', 'Samples', 'ScottishMusic', 'songwriterscircle',
     'SpotifyMusic', 'ThemVoices', 'unheardof', 'WhatIListenTo',
     'WTFMusicVideos', 'AlbumArtPorn', 'albumreviews', 'Audio', 'audiophile',
-    'AustinMusicians', 'bandmembers', 'CarAV', 'CassetteCulture',
+    'AustinMusicians', 'bandmembers', 'CarAV', 'cassetteculture',
     'Cd_collectors', 'ConcertTickets', 'germusic', 'glastonbury_festival',
     'ICoveredASong', 'ifyoulikeblank', 'independentmusic', 'ineedasong',
     'japanesemusic', 'Jazzguitar', 'koreanmusic', 'LubbockMusicians', 'mixcd',
@@ -157,11 +162,11 @@ music_subreddits = tuple( [subreddit for sublist in subreddit_genres.values() fo
     'ADTR', 'AliciaKeys', 'ArcadeFire', 'ArethaFranklin', 'APerfectCircle',
     'TheAvettBrothers', 'BaysideIsACult', 'TheBeachBoys', 'beatles',
     'billytalent', 'Blink182', 'BMSR', 'boniver', 'brandnew',
-    'BruceSpringsteen', 'Burial', 'ChristinaAguilera', 'cityandcolour',
+    'BruceSpringsteen', 'ChristinaAguilera', 'cityandcolour',
     'Coldplay', 'CutCopy', 'TheCure', 'DavidBowie',
     'DeathCabforCutie', 'DeepPurple', 'deftones', 'DieAntwoord', 'DMB',
     'elliegoulding', 'empireofthesun', 'EnterShikari', 'Evanescence', 'feedme',
-    'FirstAidKit', 'flaminglips', 'franzferdinand', 'Gorillaz', 'gratefuldead',
+    'FirstAidKit', 'flaminglips', 'franzferdinand', 'gorillaz', 'gratefuldead',
     'Incubus', 'JackWhite', 'JanetJackson',
     'John_frusciante', 'kings_of_leon', 'Korn', 'ladygaga', 'lanadelrey',
     'lennykravitz', 'Led_Zeppelin', 'lorde', 'Macklemore', 'Madonna',
@@ -176,7 +181,7 @@ music_subreddits = tuple( [subreddit for sublist in subreddit_genres.values() fo
     'TheOffspring', 'TheStrokes', 'TheMagneticZeros', 'tragicallyhip',
     'ToolBand', 'U2Band', 'Umphreys', 'UnicornsMusic', 'velvetunderground',
     'Ween', 'weezer', 'WeirdAl', 'yesband', 'Zappa', 'AlbumArtPorn',
-    'BandPorn', 'concertporn', 'guitarPorn', 'InstrumentPorn', 'MetalMemes',
+    'BandPorn', 'concertporn', 'guitarporn', 'InstrumentPorn', 'MetalMemes',
     'MusicBattlestations', 'musicpics', 'GrooveSharkPlaylists', 'DJs',
     'PirateRadio', 'spotify', 'Turntablists', 'abletonclass', 'bandmembers',
     'bassLessons', 'DancePerformance', 'grooveshark',
@@ -184,7 +189,7 @@ music_subreddits = tuple( [subreddit for sublist in subreddit_genres.values() fo
     'MusicEd', 'musicindustry', 'MusicInstructor', 'musicology', 'musictheory',
     'solresol', 'tabs', 'Accordion', 'banjo', 'Bass', 'bassplaying', 'Bassoon',
     'beatbox', 'brass', 'Cello', 'Clarinet', 'classicalguitar', 'Concertina',
-    'DoubleBass', 'Drummers', 'drums', 'Flute', 'Guitar', 'GuitarPlaying',
+    'DoubleBass', 'Drummers', 'drums', 'Flute', 'guitar', 'GuitarPlaying',
     'hammondorgan', 'handpan', 'harmonica', 'Horn', 'keys', 'Luthier',
     'Mandolin', 'Oboe', 'Ocarina', 'Percussion', 'Percussionists', 'piano',
     'Piccolo', 'PlayingGuitar', 'Recorder', 'saxophone', 'saxophonics',
