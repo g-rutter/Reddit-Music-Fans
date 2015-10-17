@@ -67,7 +67,7 @@ def prune_sparse_samples(X, Y, threshold=5):
 
     return X[mask], Y[mask]
 
-def prune_sparse_predictors(X, Y, predictor_labels, threshold=10):
+def prune_sparse_predictors(X, predictor_labels, threshold=10):
     ''' Remove predictors with fewer than 'threshold' nonzero samples. '''
 
     # Array of col values with a nonzero entry
@@ -92,7 +92,7 @@ def prune_sparse_predictors(X, Y, predictor_labels, threshold=10):
     print "{0:.2f}% of {1:d} predictors pruned (threshold {2:d})"\
         .format((100.0*len(delete))/n_predictors, n_predictors, threshold)
 
-    return X[:,mask], Y, predictor_labels[mask]
+    return X[:,mask], predictor_labels[mask]
 
 def balance_data(X, Y):
     ''' Finds least common outcome i and randomly removes other outcomes'
@@ -180,3 +180,17 @@ def kill_outcome(X, Y, outcomes, outcome):
 
     return X[mask], Y[mask], tuple(outcomes)
 
+def remove_predictor(X, predictor_labels, predictors):
+    ''' Remove a list of predictors given by their labels
+        from the columns of X and from predictor_labels.
+    '''
+
+    n_predictors = predictor_labels.shape
+    mask = np.ones(n_predictors, dtype=bool)
+
+    for predictor in predictors:
+        mask &= (predictor_labels != predictor)
+
+    print "Removed", (mask != True).sum(), "predictors."
+
+    return X[:,mask], predictor_labels[mask]

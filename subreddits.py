@@ -81,16 +81,13 @@ subreddit_genres = {
 
 music_subreddits = tuple( [subreddit for sublist in subreddit_genres.values() for subreddit in sublist] )\
 + (
-    # These subreddits were excluded from the above for overlapping genres.
+    # Manually excluded subreddits
     'electrohiphop', 'raprock', 'industrialmetal', 'industrialmusic',
     'synthrock', 'headphones', 'nin', 'violinist', 'abletonlive', 'funk',
     'futurebass', 'altrap', 'trapmuzik', 'trap', 'trapproduction',
     'nightwish', 'Savant', 'lapfoxtrax', 'wakarusa', 'LightningInABottle',
     'TomorrowWorld', 'Tomorrowland', 'MonstercatCringe', 'themonsterkittens',
     'subgenreid', 'burial', 'porterrobinson', 'outrun',
-
-
-    # Manually excluded subreddits
     'Musicthemetime', 'SundayMorningMusic', 'ChristianMusic', 'BattleMusic',
     'nintendomusic', 'crappymusic', 'WussyMusic', 'trueMusic',
     'experimentalmusic', 'musicforsex', 'askmusic', 'INTPmusic', 'UnsentMusic',
@@ -108,7 +105,9 @@ music_subreddits = tuple( [subreddit for sublist in subreddit_genres.values() fo
     'Lollapalooza', 'bisco', 'maschine', 'TheWeeknd', 'livesound',
     'deathgrips', 'edmprodcirclejerk', 'TameImpala', 'macdemarco',
     'guitarporn', 'SakuraGakuin', 'guitars', 'avengedsevenfold',
-    'Dreamtheatre', 'Sufjan',
+    'Dreamtheater', 'Sufjan', 'Guitar', 'VinylCollectors',
+
+    #FireflyFestival, fireemblem, CherokeeXJ ?
 
     # All 'misc' music subreddits
     '2010sMusic', '2000sMusic', '90smusic', '80smusic', '70smusic', '60sMusic',

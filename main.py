@@ -19,10 +19,51 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.qda import QDA
 from sklearn.lda import LDA
 from sklearn.pipeline import Pipeline
-
 from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
 
 import matplotlib.pyplot as plt
+import seaborn as sns
+
+def temp_pickle(topickle=None):
+
+    fn = "temp.pickle"
+
+    if topickle != None:
+
+        with open(fn, 'w') as data_f:
+            pickle.dump(topickle, data_f)
+            return topickle
+
+    with open(fn, 'r') as data_f:
+        return pickle.load(data_f)
+
+
+def plot_LDA_histogram(X_r3, X_r20, Yps3, Yps20):
+    plt.figure(figsize=(10,5.5))
+    ax = plt.subplot(1,1,1)
+    plt.suptitle(u"Linear Discriminant Analysis: Fans who posted in ≥20 subreddits are more distinct by class than fans who posted in ≥3.")
+    plt.xlabel("Linear discriminant value")
+    plt.ylabel("Probability density")
+
+    snscol = sns.color_palette("Set1", n_colors=8, desat=.5)
+
+    # settings
+    bins = 20
+    linewidth=2
+    labels=('RockMetal', 'Hiphop')
+
+    i=0
+    plt.hist(X_r3[Yps3 == i], normed=True, bins=bins, histtype='step', color=snscol[i], label=labels[i]+u' ( ≥3 subreddits)', linewidth=linewidth)
+    i=1
+    plt.hist(X_r3[Yps3 == i], normed=True, bins=bins, histtype='step', color=snscol[i], label=labels[i]+u' ( ≥3 subreddits)', linewidth=linewidth)
+    i=0
+    plt.hist(X_r20[Yps20 == i], normed=True, bins=bins, histtype='step', color=snscol[i], label=labels[i]+u' ( ≥20 subreddits)', linestyle=('dashed'), linewidth=linewidth)
+    i=1
+    plt.hist(X_r20[Yps20 == i], normed=True, bins=bins, histtype='step', color=snscol[i], label=labels[i]+u' ( ≥20 subreddits)', linestyle=('dashed'), linewidth=linewidth)
+
+    plt.legend()
+    plt.show()
 
 if __name__ == "__main__":
 
@@ -30,7 +71,7 @@ if __name__ == "__main__":
     #  Settings  #
     ##############
 
-    pickle_filename = 'music_old.pickle'
+    pickle_filename = 'music_2000offtopic.pickle'
 
     #################################
     #  Data preparation or read-in  #
@@ -56,87 +97,70 @@ if __name__ == "__main__":
     X = X.tocsr()
     nonmusic_subreddits = np.array(nonmusic_subreddits, dtype=object)
 
-    (X, Y, genres) = kill_outcome(X, Y, genres, 'classical')
-
-    (X, Y, nonmusic_subreddits) = prune_sparse_predictors(
-                X, Y, nonmusic_subreddits, threshold=20)
-    (X, Y) = prune_sparse_samples(X, Y, threshold=3)
-    (X, Y) = balance_data(X, Y)
-
-    # (X_train, Y_train, X_test, Y_test) = input_shuffle_split(X, Y, train=0.7)
     summarise_dataset(X, Y, genres)
 
 
-    ######################
-    #  Machine learning  #
-    ######################
+    # Delete those predictors I failed to exclude when I created the pickle.
+    (X, nonmusic_subreddits) = remove_predictor(X, nonmusic_subreddits, music_subreddits)
 
+    (X, Y, genres) = kill_outcome(X, Y, genres, 'classical')
+    (X, Y, genres) = kill_outcome(X, Y, genres, 'electronic')
 
-    classifiers = {
-        # 'RForest'    : RandomForestClassifier(n_jobs=-1),
-        # # 'ExtraTrees' : ExtraTreesClassifier(),
-        # # 'AdaBoost'   : AdaBoostClassifier(),
-        'LinearSV'   : LinearSVC(),
-        # # 'GaussNB'    : GaussianNB(),  # Really bad. (BC data is correlated?)
-        # # 'LinearDA'   : LDA(),
-    }
+    # (X, nonmusic_subreddits) = prune_sparse_predictors(
+                # X, nonmusic_subreddits, threshold=20)
 
-    for name, classifier in classifiers.items():
-        print "Training", name
-        classifier.fit(X, Y)
-        print "Test score = {0:.3f}".format( classifier.score(X.toarray(), Y) )
+    (Xps20, Yps20) = prune_sparse_samples(X, Y, threshold=20)
+    (Xps3, Yps3) = prune_sparse_samples(X, Y, threshold=3)
 
-    print "Most relevant subreddits:"
-    n_max = 60
-    genretopsubs = {}
-    genretopsubs[0] = []
-    genretopsubs[1] = []
-    genretopsubs[2] = []
-    # genretopsubs[3] = []
-    for name, classifier in classifiers.items():
-        for i_max in range(n_max):
-            for i_genre, j_subreddit in enumerate(classifier.coef_.argmax(axis=1)):
-                classifier.coef_[i_genre][j_subreddit] = 0.0
-                genretopsubs[i_genre].append( nonmusic_subreddits[j_subreddit] )
+    (Xps20, Yps20) = balance_data(Xps20, Yps20)
+    (Xps3, Yps3)   = balance_data(Xps3, Yps3)
+    summarise_dataset(Xps20, Yps20, genres)
 
-    for i_genre, listofsubs in genretopsubs.items():
-        print genres[i_genre]
-        print listofsubs
+    try:
+        (X_r3, X_r20, Yps3, Yps20) = temp_pickle()
+    except (IOError, ValueError):
 
-        # print classifier.get_params()
+        # (X_train, Y_train, X_test, Y_test) = input_shuffle_split(X, Y, train=0.8)
+        summarise_dataset(Xps3, Yps3, genres)
+        summarise_dataset(Xps20, Yps20, genres)
 
-    ##############################
-    #  Dimensionality reduction  #
-    ##############################
+        # (Xps20_train, Yps20_train, Xps20_test, Yps20_test) = input_shuffle_split(Xps20, Yps20, train=0.8)
 
-    # print "Doing PCA"
-    # pca = PCA(n_components=2)
-    # X_r1 = pca.fit(X.toarray()).transform(X.toarray())
+        ##############################
+        #  Dimensionality reduction  #
+        ##############################
 
-    # print "Doing LDA"
-    # lda1 = LDA(n_components=1)
-    # lda2 = LDA(n_components=2)
-    # X_r1 = lda1.fit(X.toarray(), Y).transform(X.toarray())
-    # X_r2 = lda2.fit(X.toarray(), Y).transform(X.toarray())
+        print "Doing LDA"
+        lda3 = LDA(n_components=1)
+        lda20 = LDA(n_components=1)
+        X_r3 = lda3.fit(Xps3.toarray(), Yps3).transform(Xps3.toarray())
+        X_r20 = lda20.fit(Xps20.toarray(), Yps20).transform(Xps20.toarray())
 
-    # # PCA
-    # # plt.figure()
-    # # for i, c, genre in zip([0, 1, 2, 3], "rgby", genres):
-        # # plt.scatter(X_r1[Y == i, 0], X_r1[Y == i, 1], c=c, label=genre)
-        # # plt.legend()
-        # # plt.title('PCA')
+        temp_pickle( topickle=(X_r3, X_r20, Yps3, Yps20) )
 
-    # # LDA
-    # plt.figure()
-    # for i, c, genre in zip([0, 1, 2, 3], "rgby", genres):
-        # plt.figure(0)
-        # plt.scatter(X_r2[Y == i, 0], X_r2[Y == i, 1], c=c, label=genre)
-        # plt.figure(1)
-        # plt.hist(X_r1[Y == i], bins=25, histtype='step', color=c, label=genre)
+    plot_LDA_histogram(X_r3, X_r20, Yps3, Yps20)
 
-    # plt.figure(0)
-    # plt.legend()
-    # plt.figure(1)
-    # plt.legend()
+    ##################################
+    #  Logit on LDA-reduced 1D data  #
+    ##################################
 
-    # plt.show()
+    # logit = LogisticRegression()
+
+    # (X_r20_train, Y_r20_train, X_r20_test, Y_r20_test) = \
+                # input_shuffle_split(X_r20, Yps20, train=0.8)
+    # logit.fit(X_r20_train, Y_r20_train)
+    # print "logit with LDA preprocessing score", logit.score(X_r20_test, Y_r20_test)
+
+    # logit = LogisticRegression()
+
+    # (Xps20_train, Yps20_train, Xps20_test, Yps20_test) = \
+                # input_shuffle_split(Xps20, Yps20, train=0.8)
+    # logit.fit(Xps20_train, Yps20_train)
+    # print "logit score" , logit.score(Xps20_test, Yps20_test)
+
+    #########################
+    #  LDA on its own data  #
+    #########################
+
+    lda = LDA()
+    # print "logit with LDA preprocessing score", logit.score(X_r20_test, Y_r20_test)
