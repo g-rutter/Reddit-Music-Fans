@@ -35,6 +35,6 @@ Below, the data is shown projected onto a single component, found by Linear Disc
 
 The class distributions have a single mode and are approximately Gaussian. Restricting the input to users who contributed to at least 20 different off-topic subreddits increases the separation of the distributions drastically.
 
-![Graph of 1D projection of data, by class, using a linear component found by LDA](README_figs/LDA_20vs3.png)
+![Graph of 1D projection of data, by class, using a linear component found by LDA](README_figs/LDA_20vs3.svg)
 
 ### Non-predictive predictors and collinearity
