@@ -29,9 +29,11 @@ The SQL source has 54,504,410 rows, and each is a unique comment. The columns ar
 
 The data is noisy, highly correlated and sparse. There are approximately 47,000 fans of the two genres. To balance the two classes, the RockMetal class was slightly under-sampled. The top 2000 subreddits were tracked as predictors. The average user posted in <1% of these.
 
-### Separation of classes in predictor-space
+### Low-dimensional visualisation
 
-Below, the data is shown projected onto a single component, found by Linear Discriminant Analysis (LDA). The class distributions have a single mode and are approximately Gaussian. Restricting the input to users who contributed to at least 20 different off-topic subreddits leads to a separation of the distributions. The 'at least 3' dataset has 12,829 fans per class, but the 'at least 20' dataset has just 1,795.
+Below, the data is shown projected onto a single component, found by Linear Discriminant Analysis (LDA). Two datasets are shown: one for fans who posted in at least 3 off-topic subreddits, and another for fans who posted in at least 20. The 'at least 3' set has 12,829 fans per class, but the 'at least 20' set has just 1,795.
+
+The class distributions have a single mode and are approximately Gaussian. Restricting the input to users who contributed to at least 20 different off-topic subreddits increases the separation of the distributions drastically.
 
 ![Graph of 1D projection of data, by class, using a linear component found by LDA](README_figs/LDA_20vs3.png)
 
