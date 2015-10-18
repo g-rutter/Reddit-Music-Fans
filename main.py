@@ -15,19 +15,19 @@ import pickle
 
 from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, AdaBoostClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.qda import QDA
 from sklearn.lda import LDA
 from sklearn.pipeline import Pipeline
-from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import BernoulliRBM
+from sklearn.grid_search import GridSearchCV
+from sklearn.cluster import FeatureAgglomeration
+
+from scipy.stats import pearsonr
 
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def temp_pickle(topickle=None):
-
-    fn = "temp.pickle"
+def temp_pickle(fn, topickle=None):
 
     if topickle != None:
 
@@ -38,13 +38,35 @@ def temp_pickle(topickle=None):
     with open(fn, 'r') as data_f:
         return pickle.load(data_f)
 
+def test_suite(algorithm, X, Y, train_thres=1, test_thresh=range(1,20)):
+    (X_train, Y_train, X_test, Y_test) = \
+            input_shuffle_split(X, Y, train=0.80, seed=0)
+
+    print "Producing training data..."
+    (X_train_3, Y_train_3) = prune_sparse_samples(X_train, Y_train,
+                                                  threshold=train_thres,
+                                                  silent=True)
+    (X_train_bal_3, Y_train_bal_3) = balance_data(X_train_3, Y_train_3)
+
+    print "Training algorithm..."
+    fitted = algorithm.fit(X_train_bal_3.toarray(), Y_train_bal_3)
+
+    print "Producing test data..."
+    X_test_pruned = {}
+    Y_test_pruned = {}
+    for i in test_thresh:
+        (X_test_pruned[i], Y_test_pruned[i]) =\
+                prune_sparse_samples(X_test, Y_test, threshold=i, silent=True)
+        (X_test_pruned[i], Y_test_pruned[i]) = balance_data(X_test_pruned[i], Y_test_pruned[i])
+        print "Thresh", i, "score", fitted.A.score(X_test_pruned[i].toarray(), Y_test_pruned[i])
+
 
 def plot_LDA_histogram(X_r3, X_r20, Yps3, Yps20):
-    plt.figure(figsize=(10,5.5))
+    plt.figure(figsize=(8,4.5))
     ax = plt.subplot(1,1,1)
-    plt.suptitle(u"Linear Discriminant Analysis: Fans who posted in ≥20 subreddits are more distinct by class than fans who posted in ≥3.")
-    plt.xlabel("Linear discriminant value")
-    plt.ylabel("Probability density")
+    plt.suptitle("Linear Discriminant Analysis: One-dimensional projection of data", size=14)
+    plt.xlabel("Linear discriminant value", size=14)
+    plt.ylabel("Probability density", size=14)
 
     snscol = sns.color_palette("Set1", n_colors=8, desat=.5)
 
@@ -62,8 +84,8 @@ def plot_LDA_histogram(X_r3, X_r20, Yps3, Yps20):
     i=1
     plt.hist(X_r20[Yps20 == i], normed=True, bins=bins, histtype='step', color=snscol[i], label=labels[i]+u' ( ≥20 subreddits)', linestyle=('dashed'), linewidth=linewidth)
 
-    plt.legend()
-    plt.show()
+    plt.legend(fontsize=11)
+    plt.savefig("README_figs/LDA_20vs3.svg")
 
 if __name__ == "__main__":
 
@@ -72,6 +94,8 @@ if __name__ == "__main__":
     ##############
 
     pickle_filename = 'music_2000offtopic.pickle'
+
+    fn = "LDA.pickle"
 
     #################################
     #  Data preparation or read-in  #
@@ -97,70 +121,38 @@ if __name__ == "__main__":
     X = X.tocsr()
     nonmusic_subreddits = np.array(nonmusic_subreddits, dtype=object)
 
-    summarise_dataset(X, Y, genres)
-
-
     # Delete those predictors I failed to exclude when I created the pickle.
     (X, nonmusic_subreddits) = remove_predictor(X, nonmusic_subreddits, music_subreddits)
 
     (X, Y, genres) = kill_outcome(X, Y, genres, 'classical')
     (X, Y, genres) = kill_outcome(X, Y, genres, 'electronic')
 
-    # (X, nonmusic_subreddits) = prune_sparse_predictors(
-                # X, nonmusic_subreddits, threshold=20)
+    ################################
+    #  BRBM learning rate trainer  #
+    ################################
 
-    (Xps20, Yps20) = prune_sparse_samples(X, Y, threshold=20)
-    (Xps3, Yps3) = prune_sparse_samples(X, Y, threshold=3)
+    # Prune most irrelevant data just for slight speedup
+    (X_5, Y_5) = prune_sparse_samples(X, Y, threshold=5)
 
-    (Xps20, Yps20) = balance_data(Xps20, Yps20)
-    (Xps3, Yps3)   = balance_data(Xps3, Yps3)
-    summarise_dataset(Xps20, Yps20, genres)
+    print "Training BRBM"
 
-    try:
-        (X_r3, X_r20, Yps3, Yps20) = temp_pickle()
-    except (IOError, ValueError):
+    rbm = BernoulliRBM(random_state=0, verbose=True, n_iter=20)
+    logistic = LogisticRegression()
 
-        # (X_train, Y_train, X_test, Y_test) = input_shuffle_split(X, Y, train=0.8)
-        summarise_dataset(Xps3, Yps3, genres)
-        summarise_dataset(Xps20, Yps20, genres)
+    rbm_logit = Pipeline(steps=[('rbm', rbm), ('logistic', logistic)])
+    print GridSearchCV(rbm_logit,
+                       param_grid={'rbm__learning_rate':(1,0.5,0.1,0.05,0.01,0.005,0.001)},
+                       n_jobs=-1,
+                       cv=4
+                       ).fit(X_5, Y_5)\
+                        .grid_scores_
 
-        # (Xps20_train, Yps20_train, Xps20_test, Yps20_test) = input_shuffle_split(Xps20, Yps20, train=0.8)
+    ###########################
+    #  Feature agglomeration  #
+    ###########################
 
-        ##############################
-        #  Dimensionality reduction  #
-        ##############################
+    # agglo = FeatureAgglomeration(n_clusters=100,)
+    # logistic = LogisticRegression()
 
-        print "Doing LDA"
-        lda3 = LDA(n_components=1)
-        lda20 = LDA(n_components=1)
-        X_r3 = lda3.fit(Xps3.toarray(), Yps3).transform(Xps3.toarray())
-        X_r20 = lda20.fit(Xps20.toarray(), Yps20).transform(Xps20.toarray())
-
-        temp_pickle( topickle=(X_r3, X_r20, Yps3, Yps20) )
-
-    plot_LDA_histogram(X_r3, X_r20, Yps3, Yps20)
-
-    ##################################
-    #  Logit on LDA-reduced 1D data  #
-    ##################################
-
-    # logit = LogisticRegression()
-
-    # (X_r20_train, Y_r20_train, X_r20_test, Y_r20_test) = \
-                # input_shuffle_split(X_r20, Yps20, train=0.8)
-    # logit.fit(X_r20_train, Y_r20_train)
-    # print "logit with LDA preprocessing score", logit.score(X_r20_test, Y_r20_test)
-
-    # logit = LogisticRegression()
-
-    # (Xps20_train, Yps20_train, Xps20_test, Yps20_test) = \
-                # input_shuffle_split(Xps20, Yps20, train=0.8)
-    # logit.fit(Xps20_train, Yps20_train)
-    # print "logit score" , logit.score(Xps20_test, Yps20_test)
-
-    #########################
-    #  LDA on its own data  #
-    #########################
-
-    lda = LDA()
-    # print "logit with LDA preprocessing score", logit.score(X_r20_test, Y_r20_test)
+    # agglo_logit = Pipeline(steps=[('agglo', agglo), ('logistic', logistic)])
+    # test_suite(agglo_logit, X, Y, train_thres=1, test_thresh=[10])

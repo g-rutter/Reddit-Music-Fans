@@ -5,8 +5,9 @@ import bisect
 import numpy as np
 
 import sklearn as sk
+from scipy.stats import pearsonr
 
-def input_shuffle_split(X, Y, train=0.7):
+def input_shuffle_split(X, Y, train=0.7, seed=None):
     ''' Split input data into training and testing data
         WARNING: Once Y is shuffled, several preprocessing functions will no
                  longer work properly on it.
@@ -30,7 +31,7 @@ def input_shuffle_split(X, Y, train=0.7):
 
         n_training_samples = int(outcome_pop*train)
 
-        keep = sk.utils.shuffle(range(lower, upper))[:n_training_samples]
+        keep = sk.utils.shuffle(range(lower, upper), random_state=seed)[:n_training_samples]
         training_mask[keep] = True
 
         lower = upper
@@ -38,7 +39,7 @@ def input_shuffle_split(X, Y, train=0.7):
     return (X[training_mask], Y[training_mask],
             X[training_mask == False], Y[training_mask == False])
 
-def prune_sparse_samples(X, Y, threshold=5):
+def prune_sparse_samples(X, Y, threshold=1, silent=False):
     ''' Remove samples who posted on less than 'threshold' offtopic subreddits
     '''
 
@@ -62,8 +63,9 @@ def prune_sparse_samples(X, Y, threshold=5):
     mask = np.ones(n_samples, dtype=bool)
     mask[delete] = False
 
-    print "{0:.2f}% of {1:d} samples pruned (threshold {2:d})"\
-        .format((100.0*len(delete))/n_samples, n_samples, threshold)
+    if not silent:
+        print "{0:.2f}% of {1:d} samples pruned (threshold {2:d})"\
+            .format((100.0*len(delete))/n_samples, n_samples, threshold)
 
     return X[mask], Y[mask]
 
@@ -137,7 +139,7 @@ def count_contiguous_blocks(A, n):
         block_start += block_length
         yield block_length
 
-def summarise_dataset(X, Y, outcomes):
+def summarise_dataset(X, Y, outcomes=None):
     print "--------------------------------------------"
 
     print "DATA SUMMARY\n"
@@ -151,7 +153,10 @@ def summarise_dataset(X, Y, outcomes):
 
     print "{0:d} outcomes:".format( n_outcomes )
     for i, block_length in enumerate(count_contiguous_blocks(Y, n_outcomes)):
-        print " {0:7d} samples of \"{1:s}\"".format(block_length, outcomes[i])
+        if outcomes is None:
+            print " {0:7d} samples of outcome {1}\"".format(block_length, i)
+        else:
+            print " {0:7d} samples of \"{1:s}\"".format(block_length, outcomes[i])
 
 
 
@@ -180,17 +185,37 @@ def kill_outcome(X, Y, outcomes, outcome):
 
     return X[mask], Y[mask], tuple(outcomes)
 
-def remove_predictor(X, predictor_labels, predictors):
-    ''' Remove a list of predictors given by their labels
-        from the columns of X and from predictor_labels.
+def remove_predictor(X, predictor_labels, targets):
+    ''' Remove a list 'targets' of predictors given by their
+        labels from the columns of X and from predictor_labels.
     '''
 
     n_predictors = predictor_labels.shape
     mask = np.ones(n_predictors, dtype=bool)
 
-    for predictor in predictors:
+    for predictor in targets:
         mask &= (predictor_labels != predictor)
 
-    print "Removed", (mask != True).sum(), "predictors."
+    print "Removed", (mask == False).sum(), "predictors which were blacklisted."
 
     return X[:,mask], predictor_labels[mask]
+
+def prune_high_p(X, Y, predictors, pmax=0.05):
+    ''' Remove predictors which do not correlate with an outcome with a
+        p-value < pmax. This simple test makes sense in case of a linear
+        model, and prevents overfitting from the start.
+    '''
+
+    n_predictors = predictors.shape
+    mask = np.zeros(n_predictors, dtype=bool)
+    Xar = X.toarray()
+
+    for i_subreddit, subreddit in enumerate(predictors):
+        (corr, pval) = pearsonr(Xar[:,i_subreddit], Y)
+
+        if pval < pmax:
+            mask[i_subreddit] = True
+
+    print "Removed", (mask == False).sum(), "predictors with p >", pmax
+
+    return X[:,mask], predictors[mask]
