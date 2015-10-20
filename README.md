@@ -25,30 +25,34 @@ Predicting music tastes from unrelated interests. A data science project.
 
 ## Data exploration
 
-The SQL source has 54,504,410 rows, and each is a unique comment. The columns are comment attributes, including user name and subreddit. After significant data processing, an array of features `X` was produced. Its rows are music fans, and its columns are subreddits unrelated to music. Each cell takes a boolean value; `True` if the fan posts in the subreddit. `Y` records the outcomes; each fans preferred genre.
+### Producing the input
 
-The data is noisy, highly correlated and sparse. There are approximately 47,000 fans of the two genres. To balance the two classes, the RockMetal class was slightly under-sampled. The top 2000 subreddits were tracked as features. The average user posted in <1% of these.
+The SQL source has 54,504,410 rows, and each is a unique comment. The columns are comment attributes, including user name and subreddit. After significant data processing, an array of features `X` was produced. Its rows are music fans, and its columns are subreddits unrelated to music. Each cell takes a boolean value; `True` if the fan posts in the subreddit. The top 2000 subreddits were tracked as features. An array `Y` records the outcomes; each fans preferred genre. The data was balanced on outcome in order to tackle the interesting case of maximum information entropy.
 
 ### Low-dimensional visualisation
 
 Below, the data is shown projected onto a single linear component, the direction of maximum class separation, found by Linear Discriminant Analysis (LDA).
 
-<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/master/README_figs/LDA_20vs3.svg" /></p>
+<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/master/README_figs/LDA_20vs1.svg" /></p>
 
-**Two datasets are shown, each with their own linear discriminant:** one of fans who posted in at least 3 off-topic subreddits, and another only of fans who posted in at least 20. The ≥3 set has 12,829 fans per class, but the ≥20 set has just 1,795.
+**Two datasets are shown, each with their own linear discriminant:** one is the full set, with all fans who posted in any of the top 2000 non-music subreddits, and the other only shows fans who posted in at least 20 non-music subreddits. The full set has 12,829 fans per class, but the ≥20 set has just 1,795.
 
 **Key insights:**
 
-* The class distributions have a single mode and are approximately Gaussian along this linear component.
-* Classification in the ≥20 set is about 90% accurate by eye, which supports the applicability of linear modelling to this problem. This places an optimistic upper limit of 90% on LDA classification accuracy, since the test data was also the training data.
-* The poor performance on the ≥3 dataset hints that the best algorithm will only be a humble improvement from the 50% coin-flipping approach, for the less prolific Reddit posters.
+* The class distributions have a single mode and are approximately Gaussian along this linear component, with differing means. This difference between classes suggests that there is information about music taste encoded in fans' unrelated interests.
+* Classification in the ≥20 set is about 90% accurate by eye, which supports the applicability of linear modelling to this problem. This places an optimistic upper limit of 90% on LDA classification accuracy for the ≥20 set, since the test data was also the training data.
+* The lack of distinction between the classes on the full dataset hints that the best algorithm may only be a humble improvement from the 50% coin-flipping approach, for the less prolific Reddit posters.
 
-### Sample features
+### Correlation and sparsity of features
 
-The features of the data are subreddits, and each cell takes a boolean value for whether the fan posts in the subreddit. The features are expected to be difficult for several reasons:
+The features are:
 
-* **Highly correlated and/or anticorrelated** unstable for many algorithms, low interpretability because of multiple equivalent solutions
-* **Very sparse** no small number of features will have broad predictive power as must users dont use most subreddits. need to group features or something, not SELECT some (and throw away others)
-* **All features contain some information** very few feautes are totally non-predictive. Subreddits that are rarely posted in have low p-value, but taken together still contrinbute to model accuracy.
+* **Highly correlated and anticorrelated**
 
-Could group similar features somehow to overcome correlation issues 
+    The features are proxies for users' interests, so strong correlation is expected. This hurts model interpretability, since solutions will not be unique and interactions between predictors can produce unintuitive results.
+
+* **Sparse and numerous**
+
+    The most popular subreddit is posted in by 42.18% of fans, but the median by just 0.14%.
+
+<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/master/README_figs/plot_sparsity.svg" /></p>
