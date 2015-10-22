@@ -6,8 +6,9 @@ import numpy as np
 
 import sklearn as sk
 from scipy.stats import pearsonr
+from scipy.sparse import csr_matrix, coo_matrix
 
-def input_shuffle_split(X, Y, train=0.7, seed=None):
+def input_shuffle_split(X, Y, train=0.8, seed=None):
     ''' Split input data into training and testing data
         WARNING: Once Y is shuffled, several preprocessing functions will no
                  longer work properly on it.
@@ -30,7 +31,6 @@ def input_shuffle_split(X, Y, train=0.7, seed=None):
         upper = outcome_pop + lower
 
         n_training_samples = int(outcome_pop*train)
-
         keep = sk.utils.shuffle(range(lower, upper), random_state=seed)[:n_training_samples]
         training_mask[keep] = True
 
@@ -43,6 +43,13 @@ def prune_sparse_samples(X, Y, threshold=1, silent=False):
     ''' Remove samples who posted on less than 'threshold' offtopic subreddits
     '''
 
+    try:
+        assert (X.dtype == bool)
+    except AssertionError:
+        print "WARNING: Threshold will check number of unique groups posted "\
+              "to, ignoring multiple posts to a group."
+
+    X = csr_matrix(X)
     # Sorted array of row values with a nonzero entry
     # We will count up the duplicate entries and see if they beat the threshold
     occupied_rows = X.nonzero()[0]
@@ -144,17 +151,17 @@ def summarise_dataset(X, Y, outcomes=None):
 
     print "DATA SUMMARY\n"
 
-    (n_samples, n_features) = X.get_shape()
+    (n_samples, n_predictors) = X.get_shape()
     n_outcomes = Y[-1] - Y[0] + 1
     nnz = X.getnnz()
 
-    print "{0:d} samples\n{1:d} features\n{2:.3f}% density\n"\
-        .format(n_samples, n_features, 100.0*nnz/(n_samples*n_features))
+    print "{0:d} samples\n{1:d} predictors\n{2:.3f}% density\n"\
+        .format(n_samples, n_predictors, 100.0*nnz/(n_samples*n_predictors))
 
     print "{0:d} outcomes:".format( n_outcomes )
     for i, block_length in enumerate(count_contiguous_blocks(Y, n_outcomes)):
         if outcomes is None:
-            print " {0:7d} samples of outcome {1}\"".format(block_length, i)
+            print " {0:7d} samples of outcome {1}".format(block_length, i)
         else:
             print " {0:7d} samples of \"{1:s}\"".format(block_length, outcomes[i])
 
@@ -185,18 +192,25 @@ def kill_outcome(X, Y, outcomes, outcome):
 
     return X[mask], Y[mask], tuple(outcomes)
 
-def remove_predictor(X, predictor_labels, targets):
-    ''' Remove a list 'targets' of predictors given by their
-        labels from the columns of X and from predictor_labels.
+def sanitise_predictors(X, predictor_labels, targets):
+    ''' 1) Remove a list 'targets' of predictors given by their
+           labels from the columns of X and from predictor_labels.
+        2) Remove predictors with no variance
+           (i.e. subreddits where no fans posted)
     '''
 
-    n_predictors = predictor_labels.shape
+    n_predictors = predictor_labels.shape[0]
     mask = np.ones(n_predictors, dtype=bool)
 
-    for predictor in targets:
-        mask &= (predictor_labels != predictor)
+    for target_predictor in targets:
+        mask &= (predictor_labels != target_predictor)
 
-    print "Removed", (mask == False).sum(), "predictors which were blacklisted."
+    for i_pred in range(n_predictors):
+        if not X[:,i_pred].getnnz():
+            mask[i_pred] = False
+
+    print "Removed", (mask == False).sum(), "predictors which were "\
+          "excluded or empty."
 
     return X[:,mask], predictor_labels[mask]
 
@@ -219,3 +233,74 @@ def prune_high_p(X, Y, predictors, pmax=0.05):
     print "Removed", (mask == False).sum(), "predictors with p >", pmax
 
     return X[:,mask], predictors[mask]
+
+class phi_agglomerate(object):
+    ''' Agglomerate:
+        1) Sort by correlation of predictors in X with Y
+        2) Split into N equal-size groups
+        3) Within group, subgroup correlated predictors
+
+        Use pearsonr func to compute phi coeff
+
+        Unfortunately, no compatibility for sparse arrays in pearsonr()
+    '''
+
+    def __init__(self, N=5):
+
+        self.N = N
+
+        self.corr_groups = None
+        self.n_predictors = None
+
+    def fit(self, X, Y):
+        ''' Derive a mapping from the full predictor set to a reduced one.
+        '''
+
+        (n_samples, self.n_predictors) = X.shape
+
+        try:
+            Xar = X.toarray()
+        except AttributeError:
+            Xar = X
+
+        # Get correlation for each predictor
+        corr = np.empty( shape=self.n_predictors, dtype=float )
+
+        for i in range(self.n_predictors):
+            corr[i] = pearsonr(Xar[:,i], Y)[0]
+
+        # Divide into ordered groups
+        orderedindices = corr.argsort()
+        splitpoint = bisect.bisect(corr[orderedindices], 0.0)
+
+        self.corr_groups = np.array_split(orderedindices, self.N)
+
+        return self
+
+    def transform(self, X, predictor_labels):
+
+        try:
+            Xar = X.toarray()
+        except AttributeError:
+            Xar = X
+
+        (n_samples, n_predictors) = Xar.shape
+
+        try:
+            assert( n_predictors == self.n_predictors )
+        except AssertionError:
+            print "ERROR: Data set has different number of predictors to "\
+                  "training set, or no fitting was performed."
+            exit()
+
+        predictor_labels_new = np.empty(shape=self.N, dtype=object)
+
+        X_new = np.empty(shape=(n_samples, self.N), dtype=float)
+        for i, group in enumerate(self.corr_groups):
+            X_new[:,i] = Xar[:,group].sum(axis=1)
+
+            predictor_labels_new[i] =\
+                    np.array([label for label in predictor_labels[group]])
+
+        return X_new, predictor_labels_new
+

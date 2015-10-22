@@ -105,9 +105,8 @@ music_subreddits = tuple( [subreddit for sublist in subreddit_genres.values() fo
     'Lollapalooza', 'bisco', 'maschine', 'TheWeeknd', 'livesound',
     'deathgrips', 'edmprodcirclejerk', 'TameImpala', 'macdemarco',
     'guitarporn', 'SakuraGakuin', 'guitars', 'avengedsevenfold',
-    'Dreamtheater', 'Sufjan', 'Guitar', 'VinylCollectors',
-
-    #FireflyFestival, fireemblem, CherokeeXJ ?
+    'Dreamtheater', 'Sufjan', 'Guitar', 'VinylCollectors', 'Recordings',
+    "FireflyFestival", 'RapWars',
 
     # All 'misc' music subreddits
     '2010sMusic', '2000sMusic', '90smusic', '80smusic', '70smusic', '60sMusic',
