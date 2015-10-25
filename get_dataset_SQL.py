@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Functions to produce an (X,Y) dataset where the samples are reddit users, the
+outcomes are the category of 'fan' the user is (one of classical, hiphop,
+rockmetal, or electronic) and the predictors are which offtopic subreddits the
+user has posted in.
+"""
+
 import sqlite3
 from subreddits import subreddit_genres, genres, music_subreddits
 import numpy as np
 from scipy.sparse import coo_matrix
-
-"""
-Functions to produce an (X,Y) dataset where the samples are reddit users, the
-outcomes are the category of 'fan' the user is (one of classical, hiphop, 
-rockmetal, or electronic) and the predictors are which offtopic subreddits the
-user has posted in.
-"""
 
 # TODO: Potential improvements
 # - Cleverer offtopic subreddit selection in get_offtopic_subreddits
@@ -34,8 +34,9 @@ def get_dataset_SQL(db_file, table_name, fans_limit=50000, offtopic_limit=2000):
     # Create sparse array of users, categorised by which genre of music
     # subreddit they contribute to (Y), and which unrelated subreddits they
     # contribute to (X)
-    print ( "Selecting fans of each genre." )
-    fans_by_genre = get_fans_by_genre(c, table_name, subreddit_genres, LIMIT=fans_limit)
+    print "Selecting fans of each genre."
+    fans_by_genre = get_fans_by_genre(c, table_name,
+                                      subreddit_genres, LIMIT=fans_limit)
 
     # Create flat list of all fans and Y array of outcomes
     # Guarentee synchronicity by creating together
@@ -46,17 +47,18 @@ def get_dataset_SQL(db_file, table_name, fans_limit=50000, offtopic_limit=2000):
     Y = np.array(Y)
 
     for (key, val) in fans_by_genre.items():
-        print ( "{0:d} fans of {1:s}".format(len(val), key) )
-    print ( "" )
+        print "{0:d} fans of {1:s}".format(len(val), key)
+    print ""
 
-    print ( "Populating list of unrelated subreddits used by music fans." )
-    nonmusic_subreddits = get_offtopic_subreddits(c, table_name, all_fans, music_subreddits, LIMIT=offtopic_limit)
-    print ( "" )
+    print "Populating list of unrelated subreddits used by music fans."
+    nonmusic_subreddits = get_offtopic_subreddits(c, table_name, all_fans,
+                                                  music_subreddits,
+                                                  LIMIT=offtopic_limit)
+    print ""
 
-    print ( "Creating sparse array of predictors for each user." )
-    n_samples = len(all_fans)
+    print "Creating sparse array of predictors for each user."
     X = get_array_user_subreddits(c, table_name, all_fans, nonmusic_subreddits)
-    print ( "" )
+    print ""
 
     conn.close()
 
@@ -76,7 +78,7 @@ def get_fans_by_genre(c, table_name, subreddit_genres, LIMIT=10000):
 
     #Select distinct authors from database
     for genre in genres:
-        c.execute (
+        c.execute(
             "SELECT DISTINCT author\
              FROM {}\
              WHERE subreddit IN ( \"{}\" )\
@@ -86,22 +88,21 @@ def get_fans_by_genre(c, table_name, subreddit_genres, LIMIT=10000):
 
         fans_by_genre[genre] = c.fetchall()
         fans_by_genre[genre] = [x[0] for x in fans_by_genre[genre]]
-    print ("")
+    print ""
 
     #Erase authors who post about more than one genre
     #This also automates removal of "[deleted]" and many bots
     duplicate_authors = []
-    removals = 0
 
     for i, genre1 in enumerate(genres):
         for genre2 in genres[i+1:]:
-            duplicate_authors += set(fans_by_genre[genre2]).intersection(fans_by_genre[genre1])
+            duplicate_authors += set(fans_by_genre[genre2]).\
+                                    intersection(fans_by_genre[genre1])
 
     for genre in fans_by_genre:
         for duplicate_author in duplicate_authors:
             try:
                 fans_by_genre[genre].remove(duplicate_author)
-                removals += 1
             except ValueError:
                 pass
     return fans_by_genre
@@ -110,7 +111,8 @@ def get_fans_by_genre(c, table_name, subreddit_genres, LIMIT=10000):
 #  Get list of all offtopic subreddits authors have contributed to. #
 #####################################################################
 
-def get_offtopic_subreddits(c, table_name, all_fans, excluded_subreddits, LIMIT=10000):
+def get_offtopic_subreddits(c, table_name, all_fans,
+                            excluded_subreddits, LIMIT=10000):
     '''
     Returns list of "offtopic" subreddits users have contributed to.
     '''
@@ -120,7 +122,7 @@ def get_offtopic_subreddits(c, table_name, all_fans, excluded_subreddits, LIMIT=
     # Potential for improvement by seeking subreddits whose popularity
     # most divides fans.
 
-    c.execute (
+    c.execute(
         "SELECT DISTINCT subreddit "\
         "FROM {} "\
         "WHERE author IN ( \"{}\" ) "\
@@ -129,8 +131,8 @@ def get_offtopic_subreddits(c, table_name, all_fans, excluded_subreddits, LIMIT=
         "ORDER BY count(subreddit) DESC "\
         "LIMIT {}"\
         .format(table_name,
-                 '", "'.join( all_fans ),
-                 '", "'.join( excluded_subreddits ),
+                 '", "'.join(all_fans),
+                 '", "'.join(excluded_subreddits),
                  LIMIT
                  )
      )
@@ -153,21 +155,21 @@ def get_array_user_subreddits(c, table_name, all_fans, offtopic_subreddits):
 
     for i_fan, fan in enumerate(all_fans):
         # print (
-        c.execute (
+        c.execute(
             "SELECT DISTINCT subreddit "\
             "FROM {} "\
             "WHERE author = \"{}\" "\
             "AND subreddit IN ( \"{}\" ) "\
-            .format( table_name, fan, '", "'.join(offtopic_subreddits ) )
+            .format(table_name, fan, '", "'.join(offtopic_subreddits))
         )
         fan_subreddits = [subreddit[0] for subreddit in c.fetchall()]
 
         for subreddit in fan_subreddits:
             i_fans.append(i_fan)
-            j_subreddits.append( offtopic_subreddits.index(subreddit) )
+            j_subreddits.append(offtopic_subreddits.index(subreddit))
 
-    values = np.ones ([ len(i_fans) ], dtype=bool)
-    X = coo_matrix( ( values, (i_fans, j_subreddits) ) )
+    values = np.ones([len(i_fans)], dtype=bool)
+    X = coo_matrix((values, (i_fans, j_subreddits)))
 
     return X
 
