@@ -6,22 +6,14 @@ Predicting music tastes from unrelated interests. A data science project.
 
 **Aim:**
 
-* Look at the success of **simple, interpretable models** to classify music fans on Reddit by their preferred music genre, based on which subreddits (Reddit subforums) _unrelated to music_ the user contributed to.
+* Use machine learning to classify music fans on Reddit by their preferred music genre, based on which subreddits (Reddit subforums) _unrelated to music_ the user contributed to.
   * A _fan_ is defined as a user who posted in subreddits related to one genre and not in subreddits of other genres.
   * The problem is restricted to binary classification. Fans labelled **Hiphop** and **RockMetal** are classified, though **Classical** and **Electronic** were also tracked.
-* Compare these simple approaches to one or two relatively complex or uninterpretable models, to see what gains in prediction accuracy can be made.
+* Select two models to compare performance between. One should be simple, and easily interpreted, while the other can test whether gains in classification accuracy can be made by a relatively complex or uninterpretable model.
 
 **Data source**: Reddit user Stuck_In_the_Matrix [made available](https://www.reddit.com/r/datasets/comments/3bxlg7/i_have_every_publicly_available_reddit_comment/) a database of every public Reddit comment. Kaggle picked up on this and are hosting the [comments from May 2015](https://www.kaggle.com/c/reddit-comments-may-2015), which was used here.
 
-**Coding tools:** Python 2 with modules numpy, scipy, scikit-learn, sqlite3 and matplotlib. Vim with tmux. IPython.
-
-## Files
-
-* **main.py** - Driver. In its current state, will produce the graphical output in this README.
-* **get_dataset_SQL.py** - Functions to create the X, Y database from SQL source.
-* **manipulate_data.py** - Post-processing tools for the X, Y arrays.
-* **subreddits.py** - Music subreddits by genre and exclusion list of all music subreddits.
-* **music_2000offtopic.pickle** - Prepared data from SQL. Takes hours to get this from the source.
+**Coding tools:** Python 2 with modules numpy, scipy, scikit-learn, sqlite3, matplotlib, seaborn, graph-tool. Vim with tmux. IPython.
 
 ## Data exploration
 
@@ -33,7 +25,7 @@ The SQL source has 54,504,410 rows, and each is a unique comment. The columns ar
 
 Below, the data is shown projected onto a single linear component, the direction of maximum class separation, found by Linear Discriminant Analysis (LDA).
 
-<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/master/README_figs/LDA_20vs1.svg" /></p>
+<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/802948ad9d1f1233d4b733fd9dd566e8bba17d86/README_figs/LDA_20vs1.svg" /></p>
 
 **Two datasets are shown, each with their own linear discriminant:** one is the full set, with all fans who posted in any of the top 2000 non-music subreddits, and the other only shows fans who posted in at least 20 non-music subreddits. The full set has 17,878 fans per class, but the ≥20 set has just 1,795.
 
@@ -57,20 +49,60 @@ The features are:
 
 * **Numerous** (high-dimensional problem)
 
-    The configuration space of 2000 binary variables accepts <img src="http://www.sciweavers.org/tex2img.php?eq=2%5E%7B2000%7D&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0" align="center" border="0" alt="2^{2000}" width="47" height="18" /> unique states. Depending on the relative weights of these states, we should expect each unseen sample to be novel. A non-parametric algorithm may struggle with this. Linear models may be able to fit an approximate solution, if linearity can approximate the target function.
+    The configuration space of 2000 binary variables accepts <img src="https://raw.githubusercontent.com/g-rutter/Reddit-Music-Fans/133a889d45c087b132acfb8cb1e3c3e43d93d568/misc/2%5E2000.png" align="center" border="0" alt="2^{2000}" width="47" height="18" /> unique states. Depending on the relative weights of these states, we should expect each unseen sample to be novel. A non-parametric algorithm may struggle with this. Linear models may be able to fit an approximate solution, if linearity can approximate the target function.
 
 The graph below shows how classification success with the standard logistic regression algorithm varies as increasingly sparse predictors are introduced. Note that the secondary Y-axis is truncated. The algorithm makes no accuracy gains past the first 40% most popular subreddits, despite the fact that about 5% of fans don't post in these. It is unlikely that the latter 60% of subreddits provide no information. Instead, model bias is likely being traded off for variance, as the less important features increase the model complexity.
 
 <p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/master/README_figs/plot_sparsity.svg" /></p>
 
-These observations on the features suggest the applicability of **feature agglomeration** for simplifying the linear model, with minimal loss of accuracy. Well-executed feature agglomeration limits the complexity that sparse predictors introduce to the model, without complete loss of their predictive power. Dimensionality reduction will enhance model interpretability by making solutions unique and stable and highlighting the important features.
+These observations, and the intuition that many of these features should have extremely similar behaviour in the limit of a very large number of samples, suggest that grouping features through a [latent variable model](https://en.wikipedia.org/wiki/Latent_variable_model) should be possible with minimal loss of information.
 
 ### Model choices
 
-**Agglomeration scheme**: A simple scheme was used. The list of features was sorted by [phi coefficient](https://en.wikipedia.org/wiki/Phi_coefficient) with the outcome. The list was sliced into N groups. Within groups, features were summed to produce a single integer value for each feature in each sample. Logistic regression was then used to fit this lower-dimensional dataset.
+Both approaches assumed a smaller set of latent variables underpin the distinction between classes. After transformation of the input X, both models relied on logistic regression for classification. The two approaches to dimensionality-reduction were:
 
-The scheme is equivalent to running logistic regression on the entire dataset while fixing the features within a group to have the same coefficient. Improvements to the scheme could include placing important or popular subreddits in smaller groups (or outside of groups) and grouping features which are correlated with each other _and_ the outcome, to mimimise information loss. However, the choice made is extremely straightforward, and may produce a simple, stable model with similar accuracy.
+ *  **Feature agglomeration**: A very simple, custom feature agglomeration scheme was used. The list of features was sorted by [phi coefficient](https://en.wikipedia.org/wiki/Phi_coefficient) with the outcome. The list was sliced into N equal groups. Within groups, features were summed to produce a single integer value. Logistic regression was then used to fit this lower-dimensional dataset.
+
+    The scheme is rather coarse, and one can easily conceive refinements. However, it will be interesting to see whether this simple approach can produce a stable model of similar accuracy to logistic regression on the raw dataset.
+
+ *  **Bernoulli restricted Boltzmann machine (BRBM)**: The BRBM expects binary inputs ("visible units") and, after training, transforms these to N latent factors ("hidden units"). Learning is unsupervised; the RBM is trained to reconstruct the visible units from a set of on/off states of its hidden units. This makes the tool more analagous to principal component analysis than linear discriminant analysis: There is no guarentee that the hidden variables learned are a good choice for discriminating the outcomes.
 
 ## Model performance
 
-<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/master/README_figs/agglo_logit.svg" /></p>
+Models were measured using K-folds testing with K = 4.
+
+Below, prediction accuracy and model stability are shown as a function of N, the number of predictors in the transformed scheme. These are contrasted to the benchmark performance of logistic regression. First, data from the agglomeration scheme are shown, for which the benchmark performance is identically equal to agglomeration with N = 2000.
+
+<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/348fb2b5e41b43e8ebfaa556b5836a055f038264/README_figs/agglo_logit.svg" /></p>
+
+The scheme reaches parity with standard logistic regression at just N = 20, and overtakes at larger N. Agglomeration incurs information loss, but protects the model from over-training on the outliers in the training set. The best balance between these two effects may be at 140 < N < 2000, as it is not clear that maximum accuracy has been reached.
+
+The ≥20 data subset, in which the ~90% of fans who posted in under 20 unique subreddits were excluded, is also plotted. These data were tested on the same model as the full dataset; no new training occurred. The accuracy here lags behind the standard logistic model, but makes gains as N increases. This may signify that these data were already protected from the effect of over-training, and merely suffer increased misclassification when information is masked by predictor agglomeration. The performance on this subset may be enhanced via smarter predictor grouping, such as including predictor covariance or using an intuition unavailable to the algorithm about which subreddits ought to have the same behaviour (e.g. subreddits like 'hockey' and 'hockeyplayers').
+
+**The work on the BRBM model will go here.**
+
+## Bonus graph
+
+A graph featuring a small number of the top subreddits among fans is shown. Click it for a larger version.
+
+<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/802948ad9d1f1233d4b733fd9dd566e8bba17d86/README_figs/top_subreddits_graph.svg" /></p>
+
+* Vertex diameter is proportional to the log of the number of fans who post.
+* Red subreddits predict hiphop according to the agglomeration model, and blue predict rockmetal.
+* Edge thickness is proportional to the absolute number of fans posting in both subreddits.
+
+## Source
+
+All code is in the top-level directory.
+
+#### Files
+
+* **main.py** - Driver. In its current state, will produce the graphical output in this README.
+* **get_dataset_SQL.py** - Functions to create the X, Y database from SQL source.
+* **manipulate_data.py** - Post-processing tools for the X, Y arrays.
+* **subreddits.py** - Music subreddits by genre and exclusion list of all music subreddits.
+
+#### Directories
+
+* **pickles** - Time-saving variable [serialisations](https://docs.python.org/2/library/pickle.html) for producing the main dataset and graphs.
+* **README_figs** - Figures in this readme, in SVG format.
