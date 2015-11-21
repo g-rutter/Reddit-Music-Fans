@@ -235,8 +235,9 @@ def plot_agglo_logit(Xps1, Yps1, nonmusic_subreddits):
     fig.add_subplot(121)
     plt.tight_layout(pad=2, w_pad=5)
     # plt.suptitle("Feature agglomeration", size=22)
-    plt.xlabel("Number of agglomerated predictors", size=labelfontsize)
-    plt.ylabel("Prediction accuracy (%)", size=labelfontsize)
+    plt.title("Model accuracy", size=22)
+    plt.xlabel("Number of hidden units", size=labelfontsize)
+    plt.ylabel("Correct predictions (%)", size=labelfontsize)
 
     plt.plot(n_groups_gen, agglo_1s, label="Agglomerated set",
              linewidth=linewidth, color=snscol[0])
@@ -261,7 +262,8 @@ def plot_agglo_logit(Xps1, Yps1, nonmusic_subreddits):
     #######################################
 
     fig.add_subplot(122)
-    plt.xlabel("Number of agglomerated predictors", size=labelfontsize)
+    plt.title("Model instability", size=22)
+    plt.xlabel("Number of hidden units", size=labelfontsize)
     plt.ylabel("Mean parameter fluctuations", size=labelfontsize)
 
     mrmsds = []
@@ -646,9 +648,9 @@ def plot_RBM(Xps1, Yps1):
     fig = plt.figure(figsize=(10, 4.0))
     fig.add_subplot(121)
     plt.tight_layout(pad=2, w_pad=5)
-    # plt.suptitle("Restricted Boltzmann Machines", size=22)
+    plt.title("Model accuracy", size=22)
     plt.xlabel("Number of hidden units", size=labelfontsize)
-    plt.ylabel("Prediction accuracy (%)", size=labelfontsize)
+    plt.ylabel("Correct predictions (%)", size=labelfontsize)
 
     plt.plot(N_range, logit_score, label="RBM features",
              linewidth=linewidth, color=snscol[0])
@@ -672,6 +674,7 @@ def plot_RBM(Xps1, Yps1):
     #######################################
 
     fig.add_subplot(122)
+    plt.title("Model instability", size=22)
     plt.xlabel("Number of hidden units", size=labelfontsize)
     plt.ylabel("Mean parameter fluctuations", size=labelfontsize)
 
@@ -692,7 +695,7 @@ def plot_RBM(Xps1, Yps1):
              label="No RBM", linestyle=('dashed'),
              linewidth=linewidth, color=snscol[2])
 
-    plt.legend(fontsize=12.5, loc=4)
+    plt.legend(fontsize=12.5, loc=1)
     axes = plt.gca()
     axes.set_xlim(plot_n_lo, plot_n_hi)
     axes.set_ylim(0.00, 0.45)
