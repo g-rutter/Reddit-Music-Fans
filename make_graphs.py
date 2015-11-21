@@ -18,7 +18,7 @@ from sklearn.lda import LDA
 
 import pickle
 from itertools import combinations
-from graph_tool.all import Graph, graph_draw, radial_tree_layout
+# from graph_tool.all import Graph, graph_draw, radial_tree_layout
 
 from manipulate_data import balance_data, prune_sparse_samples, phi_agglomerate
 
@@ -223,7 +223,7 @@ def plot_agglo_logit(Xps1, Yps1, nonmusic_subreddits):
     #  Plot - subplot 1 - prediction accuracy  #
     ############################################
 
-    plot_n_lo = 1
+    plot_n_lo = 0
     plot_n_hi = 140
 
     snscol = sns.color_palette("Set1", n_colors=8, desat=.5)
@@ -233,8 +233,8 @@ def plot_agglo_logit(Xps1, Yps1, nonmusic_subreddits):
 
     fig = plt.figure(figsize=(10, 4.0))
     fig.add_subplot(121)
-    plt.tight_layout(pad=3, w_pad=5)
-    plt.suptitle("Feature agglomeration", size=22)
+    plt.tight_layout(pad=2, w_pad=5)
+    # plt.suptitle("Feature agglomeration", size=22)
     plt.xlabel("Number of agglomerated predictors", size=labelfontsize)
     plt.ylabel("Prediction accuracy (%)", size=labelfontsize)
 
@@ -252,9 +252,9 @@ def plot_agglo_logit(Xps1, Yps1, nonmusic_subreddits):
 
     axes = plt.gca()
     axes.set_xlim(plot_n_lo, plot_n_hi)
-    axes.set_ylim(63, 71)
+    axes.set_ylim(60, 72)
 
-    plt.legend(fontsize=11.5, loc=4)
+    plt.legend(fontsize=13, loc=4)
 
     #######################################
     #  Plot - subplot 2 - Parameter RMSD  #
@@ -283,9 +283,10 @@ def plot_agglo_logit(Xps1, Yps1, nonmusic_subreddits):
              label="No agglomeration", linestyle=('dashed'),
              linewidth=linewidth, color=snscol[2])
 
-    plt.legend(fontsize=12, loc=4)
+    plt.legend(fontsize=13, loc=1)
     axes = plt.gca()
     axes.set_xlim(plot_n_lo, plot_n_hi)
+    axes.set_ylim(0.00, 0.45)
 
     plt.savefig("README_figs/agglo_logit.svg")
 
@@ -320,7 +321,6 @@ def get_mrmsd(param_sets):
     mrmsd = mrmsd/n_params
     return mrmsd
 
-
 def agglo_logit_calc(Xps1, Yps1, nonmusic_subreddits):
     ''' Handles fitting and scoring of the agglomeration->logistic regression
         machine learning scheme.
@@ -331,8 +331,9 @@ def agglo_logit_calc(Xps1, Yps1, nonmusic_subreddits):
     logit = LogisticRegression()
     (n_samples_1, _) = Xps1.shape
 
-    n_folds = 5
-    kf = KFold(n_samples_1, n_folds=n_folds, shuffle=True)
+    n_folds = 4
+    rand = 0
+    kf = KFold(n_samples_1, n_folds=n_folds, shuffle=True, random_state=rand)
 
     logit_1 = 0.0
     logit_20 = 0.0
@@ -365,12 +366,9 @@ def agglo_logit_calc(Xps1, Yps1, nonmusic_subreddits):
         for j, n_groups in enumerate(n_groups_gen):
 
             agglo = phi_agglomerate(N=n_groups).fit(Xps1[train], Yps1[train])
-            Xagglo_train_1, _ = agglo.transform(Xps1[train],
-                                                 nonmusic_subreddits)
-            Xagglo_test_1, _ = agglo.transform(Xps1[test],
-                                                nonmusic_subreddits)
-            Xagglo_test_20, _ = agglo.transform(Xps20_test,
-                                                 nonmusic_subreddits)
+            Xagglo_train_1, _ = agglo.transform(Xps1[train])
+            Xagglo_test_1, _ = agglo.transform(Xps1[test])
+            Xagglo_test_20, _ = agglo.transform(Xps20_test)
 
             logit.fit(Xagglo_train_1, Yps1[train])
 
@@ -384,61 +382,6 @@ def agglo_logit_calc(Xps1, Yps1, nonmusic_subreddits):
 
     return (n_lo, n_hi, logit_1, logit_20, n_groups_gen, agglo_1s, agglo_20s,
             params, logit_params)
-
-def plot_RBM(Xps1, Yps1):
-    ''' UNFINISHED IMPLEMENTATION
-        Will produce a plot of RBM classification accuracy and model variation
-        when finished.
-    '''
-
-    ##############
-    #  Get data  #
-    ##############
-
-    (n_samples, _) = Xps1.shape
-    n_folds = 4
-    kf = KFold(n_samples, n_folds=n_folds, shuffle=True, random_state=0)
-    RBM_1s = []
-    RBM_20s = []
-    Ns = []
-    logit = LogisticRegression()
-
-    for N in range(2, 64):
-
-        fn = "pickles/BRBM_"+str(N)+".pickle"
-        try:
-            with open(fn, 'r') as BRBM_file:
-                BRBMs = pickle.load(BRBM_file)
-        except IOError:
-            continue
-
-        RBM_1s.append(0.0)
-        RBM_20s.append(0.0)
-        Ns.append(N)
-
-        for i_fold, (train, test) in enumerate(kf):
-            Y_train = Yps1[train]
-            X_train = Xps1[train]
-            Y_test = Yps1[test]
-            X_test = Xps1[test]
-
-            BRBM = BRBMs[i_fold]
-
-            X_train_t = BRBM.transform(X_train)
-            X_test_t = BRBM.transform(X_test)
-
-            logit.fit(X_train_t, Y_train)
-
-            (X_test_ps20, Y_test_ps20) = prune_sparse_samples(X_test, Y_test,
-                                                    threshold=20, silent=True)
-            (X_test_ps20, Y_test_ps20) = balance_data(X_test_ps20, Y_test_ps20)
-            X_test_t_ps20 = BRBM.transform(X_test_ps20)
-
-            RBM_1s[-1] += (100.0*logit.score(X_test_t, Y_test)/n_folds)
-            RBM_20s[-1] += (100.0*logit.score(X_test_t_ps20, Y_test_ps20)/n_folds)
-
-    for i in range(len(RBM_1s)):
-        print "{0:2d}: {1:.3f} {2:.3f}".format(Ns[i], RBM_1s[i], RBM_20s[i])
 
 def graph_music_taste(Xps1, Yps1, nonmusic_subreddits, n_groups=20,
                       node_cut=2000, edge_cut=0.15):
@@ -586,3 +529,172 @@ def get_color_rgba(values, colormap=cm.bwr):
         rgbas.append(colormap(mapping))
 
     return rgbas
+
+def get_BRBMs(Xps1, Yps1, N_range, rand, n_folds):
+    ''' Trains a set of BRBMs on the dataset and saves as pickles.
+        Checks if pickles already exist to not repeat work on restart.
+    '''
+
+    ##############
+    #  Settings  #
+    ##############
+
+    learning_rate = 0.05
+    n_iter = 1000
+
+    ###########
+    #  Train  #
+    ###########
+
+    #Unpruned samples first (Xps1, Yps1)
+    (n_samples_1, n_features) = Xps1.shape
+    kf = KFold(n_samples_1, n_folds=n_folds, shuffle=True, random_state=rand)
+    BRBMs = np.empty([len(N_range), n_folds], dtype=object)
+
+    for i, N in enumerate(N_range):
+        for j, (train, test) in enumerate(kf):
+
+            filename = "pickles/BRBMs/N"+str(N)+"_f"+str(j)+".pickle"
+            try:
+                with open(filename, 'r') as data_f:
+                    BRBMs[i][j] = pickle.load(data_f)
+            except IOError:
+                print "Pickle not found:", filename
+                print "Training..."
+                rbm = BernoulliRBM(n_components=N, random_state=rand,
+                                   verbose=True, n_iter=n_iter,
+                                   learning_rate=learning_rate)
+                rbm.fit(Xps1[train], Yps1[train])
+                BRBMs[i][j] = rbm
+
+                with open(filename, 'w') as data_f:
+                    pickle.dump(rbm, data_f)
+
+    return BRBMs
+
+def plot_RBM(Xps1, Yps1):
+    ''' Produce a plot of RBM classification accuracy and model variation
+    '''
+
+    ######################
+    #  Stat/create data  #
+    ######################
+
+    n_lo = 10
+    n_hi = 140
+
+    N_range = range(n_lo, n_hi+1, 10)
+    rand = 0
+    n_folds = 4
+    BRBMs = get_BRBMs(Xps1, Yps1, N_range, rand, n_folds)
+
+    (n_samples_1, n_features) = Xps1.shape
+    kf = KFold(n_samples_1, n_folds=n_folds, shuffle=True, random_state=rand)
+
+    #################
+    #  Test models  #
+    #################
+
+    logit = LogisticRegression()
+    logit_score = [0.0 for i in N_range]
+    logit_score_20 = [0.0 for i in N_range]
+    logit_params = []
+    params = np.empty([len(N_range), n_folds], dtype=object)
+    logit_params = []
+
+    logit_1 = 0.0
+    logit_20 = 0.0
+
+    for j_fold, (train, test) in enumerate(kf):
+
+        (Xps20_test, Yps20_test) = prune_sparse_samples(Xps1[test], Yps1[test],
+                                                        threshold=20)
+        (Xps20_test, Yps20_test) = balance_data(Xps20_test, Yps20_test)
+
+        for i, N in enumerate(N_range):
+
+            rbm = BRBMs[i][j_fold]
+
+            Xps1_train_trans = rbm.transform(Xps1[train])
+
+            logit.fit(Xps1_train_trans, Yps1[train])
+            params[i][j_fold] = logit.coef_
+
+            Xps1_test_trans = rbm.transform(Xps1[test])
+            logit_score[i] += 100.0*logit.score(Xps1_test_trans, Yps1[test])/n_folds
+
+            Xps20_test_trans = rbm.transform(Xps20_test)
+            logit_score_20[i] += 100.0*logit.score(Xps20_test_trans, Yps20_test)/n_folds
+
+        logit.fit(Xps1[train], Yps1[train])
+        logit_params.append(logit.coef_)
+        logit_1 += (100.0*logit.score(Xps1[test], Yps1[test]))/n_folds
+        logit_20 += (100.0*logit.score(Xps20_test, Yps20_test))/n_folds
+
+    ############################################
+    #  Plot - subplot 1 - prediction accuracy  #
+    ############################################
+
+    plot_n_lo = 0
+    plot_n_hi = n_hi
+
+    snscol = sns.color_palette("Set1", n_colors=8, desat=.5)
+
+    labelfontsize = 16
+    linewidth = 2
+
+    fig = plt.figure(figsize=(10, 4.0))
+    fig.add_subplot(121)
+    plt.tight_layout(pad=2, w_pad=5)
+    # plt.suptitle("Restricted Boltzmann Machines", size=22)
+    plt.xlabel("Number of hidden units", size=labelfontsize)
+    plt.ylabel("Prediction accuracy (%)", size=labelfontsize)
+
+    plt.plot(N_range, logit_score, label="RBM features",
+             linewidth=linewidth, color=snscol[0])
+    plt.plot(N_range, logit_score_20, label=u"RBM features (≥20 subreddits)",
+             linewidth=linewidth, color=snscol[1])
+
+    plt.plot([plot_n_lo, plot_n_hi], [logit_1, logit_1], label="No RBM",
+             linestyle=('dashed'), linewidth=linewidth, color=snscol[0])
+    plt.plot([plot_n_lo, plot_n_hi], [logit_20, logit_20],
+             label=u"No RBM (≥20 subreddits)", linestyle=('dashed'),
+             linewidth=linewidth, color=snscol[1])
+
+    axes = plt.gca()
+    axes.set_xlim(plot_n_lo, plot_n_hi)
+    axes.set_ylim(60, 72)
+
+    plt.legend(fontsize=12.5, loc=4)
+
+    #######################################
+    #  Plot - subplot 2 - Parameter RMSD  #
+    #######################################
+
+    fig.add_subplot(122)
+    plt.xlabel("Number of hidden units", size=labelfontsize)
+    plt.ylabel("Mean parameter fluctuations", size=labelfontsize)
+
+    mrmsds = []
+
+    #var params is structured as:
+    #params[k][j[i] = the ith model parameter of the jth model (jth fold in the
+    #                 cross-validation) in the kth number of predictor groups
+    for k, param_sets in enumerate(params):
+        mrmsd = get_mrmsd(param_sets)
+        mrmsds.append(mrmsd)
+
+    mrmsd_logit = get_mrmsd(logit_params)
+
+    plt.plot(N_range, mrmsds, linewidth=linewidth, color=snscol[2],
+             label="RBM features")
+    plt.plot([plot_n_lo, plot_n_hi], [mrmsd_logit, mrmsd_logit],
+             label="No RBM", linestyle=('dashed'),
+             linewidth=linewidth, color=snscol[2])
+
+    plt.legend(fontsize=12.5, loc=4)
+    axes = plt.gca()
+    axes.set_xlim(plot_n_lo, plot_n_hi)
+    axes.set_ylim(0.00, 0.45)
+
+    plt.savefig("README_figs/RBMs_logit.svg")

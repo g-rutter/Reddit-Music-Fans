@@ -21,67 +21,6 @@ from numpy import array
 from sklearn.neural_network import BernoulliRBM
 from sklearn.cross_validation import KFold
 
-def train_BRBMs(Xps1, Yps1, Xps20, Yps20):
-    ''' Trains a set of BRBMs on the dataset and saves as pickles.
-        Checks if pickles already exist to not repeat work on restart.
-    '''
-
-    ##############
-    #  Settings  #
-    ##############
-
-    N_range = range(10, 141, 20)
-    learning_rate = 0.05
-    n_iter = 800
-    n_folds = 4
-    rand = 0
-
-    ###########
-    #  Train  #
-    ###########
-
-    #Unpruned samples first (Xps1, Yps1)
-    (n_samples_1, n_features) = Xps1.shape
-    kf = KFold(n_samples_1, n_folds=n_folds, shuffle=True, random_state=rand)
-
-    for N in N_range:
-
-        print "Now training for N =", N
-
-        for i, (train, test) in enumerate(kf):
-            filename = "pickles/BRBMs/N"+str(N)+"_f"+str(i)+".pickle"
-            try:
-                with open(filename, 'r') as data_f:
-                    pass
-            except IOError:
-                rbm = BernoulliRBM(n_components=N, random_state=rand,
-                                   verbose=True, n_iter=n_iter,
-                                   learning_rate=learning_rate)
-                rbm.fit(Xps1[train], Yps1[train])
-                with open(filename, 'w') as data_f:
-                    pickle.dump(rbm, data_f)
-
-    #Pruned samples (Xps20, Yps20)
-    (n_samples_20, n_features) = Xps20.shape
-    kf = KFold(n_samples_20, n_folds=n_folds, shuffle=True, random_state=rand)
-
-    for N in N_range:
-
-        print "Now training for N =", N
-
-        for i, (train, test) in enumerate(kf):
-            filename = "pickles/BRBMs/N"+str(N)+"_f"+str(i)+"_ps20.pickle"
-            try:
-                with open(filename, 'r') as data_f:
-                    pass
-            except IOError:
-                rbm = BernoulliRBM(n_components=N, random_state=rand,
-                                   verbose=True, n_iter=n_iter,
-                                   learning_rate=learning_rate)
-                rbm.fit(Xps20[train], Yps20[train])
-                with open(filename, 'w') as data_f:
-                    pickle.dump(rbm, data_f)
-
 if __name__ == "__main__":
 
     ##############
@@ -123,10 +62,10 @@ if __name__ == "__main__":
                                                    music_subreddits)
 
     (Xps1, Yps1) = prune_sparse_samples(X, Y, threshold=1)
-    (Xps20, Yps20) = prune_sparse_samples(X, Y, threshold=20)
+    # (Xps20, Yps20) = prune_sparse_samples(X, Y, threshold=20)
 
     (Xps1, Yps1) = balance_data(Xps1, Yps1)
-    (Xps20, Yps20) = balance_data(Xps20, Yps20)
+    # (Xps20, Yps20) = balance_data(Xps20, Yps20)
 
     ################################
     #  BRBM learning rate trainer  #
@@ -140,12 +79,12 @@ if __name__ == "__main__":
     #  Plots  #
     ###########
 
-    plot_LDA_histogram(Xps1, Xps20, Yps1, Yps20)
+    # plot_LDA_histogram(Xps1, Xps20, Yps1, Yps20)
 
-    plot_sparsity(Xps1, Yps1)
+    # plot_sparsity(Xps1, Yps1)
 
     plot_agglo_logit(Xps1, Yps1, nonmusic_subreddits)
 
     plot_RBM(Xps1, Yps1)
 
-    graph_music_taste(Xps1, Yps1, nonmusic_subreddits)
+    # graph_music_taste(Xps1, Yps1, nonmusic_subreddits)

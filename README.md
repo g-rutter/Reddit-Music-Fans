@@ -71,15 +71,24 @@ Both approaches assumed a smaller set of latent variables underpin the distincti
 
 Models were measured using K-folds testing with K = 4.
 
-Below, prediction accuracy and model stability are shown as a function of N, the number of predictors in the transformed scheme. These are contrasted to the benchmark performance of logistic regression. First, data from the agglomeration scheme are shown, for which the benchmark performance is identically equal to agglomeration with N = 2000.
+Below, prediction accuracy and model stability are shown as a function of N, the number of predictors in the transformed scheme. These are contrasted to the benchmark performance of logistic regression. Performace accuracy is also shown for the ≥20 data subset, in which the ~90% of fans who posted in under 20 unique subreddits were excluded. These data were tested on the same model as the full dataset; no new training occurred.
 
-<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/348fb2b5e41b43e8ebfaa556b5836a055f038264/README_figs/agglo_logit.svg" /></p>
+### Feature agglomeration
 
-The scheme reaches parity with standard logistic regression at just N = 20, and overtakes at larger N. Agglomeration incurs information loss, but protects the model from over-training on the outliers in the training set. The best balance between these two effects may be at 140 < N < 2000, as it is not clear that maximum accuracy has been reached.
+<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/628d32f91daf9472af1c6cc912bf4db38acf3fb0/README_figs/agglo_logit.svg" /></p>
 
-The ≥20 data subset, in which the ~90% of fans who posted in under 20 unique subreddits were excluded, is also plotted. These data were tested on the same model as the full dataset; no new training occurred. The accuracy here lags behind the standard logistic model, but makes gains as N increases. This may signify that these data were already protected from the effect of over-training, and merely suffer increased misclassification when information is masked by predictor agglomeration. The performance on this subset may be enhanced via smarter predictor grouping, such as including predictor covariance or using an intuition unavailable to the algorithm about which subreddits ought to have the same behaviour (e.g. subreddits like 'hockey' and 'hockeyplayers').
+Here, the benchmark performance is identically equal to agglomeration with N = 2000. The scheme reaches parity with standard logistic regression at just N = 15, and overtakes at larger N. Agglomeration incurs information loss, but protects the model from over-training on the outliers in the training set. The best balance between these two effects is either the peak at N = 100, or in the range 140 < N < 2000.
+
+The accuracy here lags behind the standard logistic model, but makes gains as N increases. This may signify that these data were already protected from the effect of over-training, and merely suffer increased misclassification when information is masked by predictor agglomeration. The performance on this subset may be enhanced via smarter predictor grouping, such as including predictor covariance or using an intuition unavailable to the algorithm about which subreddits ought to have the same behaviour (e.g. subreddits like 'hockey' and 'hockeyplayers').
+
+### Restricted Boltzmann Machines
+
+<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/628d32f91daf9472af1c6cc912bf4db38acf3fb0/README_figs/RBMs_logit.svg" /></p>
+
+Equivalent data is presented here.
 
 **The work on the BRBM model will go here.**
+
 
 ## Bonus graph
 
