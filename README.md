@@ -75,7 +75,7 @@ Below, prediction accuracy and model stability are shown as a function of N, the
 
 ### Feature agglomeration
 
-<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/628d32f91daf9472af1c6cc912bf4db38acf3fb0/README_figs/agglo_logit.svg" /></p>
+<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/6b83a805cc5f34b385eb3719a2913b1edcb79cdd/README_figs/agglo_logit.svg" /></p>
 
 Here, the benchmark performance is identically equal to agglomeration with N = 2000. The scheme reaches parity with standard logistic regression at just N = 15, and overtakes at larger N. Agglomeration incurs information loss, but protects the model from over-training on the outliers in the training set. The best balance between these two effects is either the peak at N = 100, or in the range 140 < N < 2000.
 
@@ -83,12 +83,11 @@ The accuracy here lags behind the standard logistic model, but makes gains as N 
 
 ### Restricted Boltzmann Machines
 
-<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/628d32f91daf9472af1c6cc912bf4db38acf3fb0/README_figs/RBMs_logit.svg" /></p>
+<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/6b83a805cc5f34b385eb3719a2913b1edcb79cdd/README_figs/RBMs_logit.svg" /></p>
 
-Equivalent data is presented here.
+Models were trained at 10-unit intervals. The RBM models fail to reach accuracy parity with logistic regression on the original dataset, in the range studied. This shows that the hidden units, trained to minimally represent the 2000-predictor input data, do not effectively capture properties which discriminate the two classes. In other words, there are stronger patterns in the data than those which separate the classes. In such a case, unlabelled dimensionality-reduction preprocessing is not useful.
 
-**The work on the BRBM model will go here.**
-
+Unlike the feature agglomeration model, the model is least stable at low N, and becomes increasingly stable as N grows. This may be because the RBM models' hidden units can receive input with the same sign (positive or negative) from predictors with opposing correlations with the outcome, leading to a great deal of noise in training on each data subset. If this is correct, the fall in fluctuations could come from this scenario becoming less likely as N rises.
 
 ## Bonus graph
 
