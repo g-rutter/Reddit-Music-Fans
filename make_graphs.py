@@ -236,7 +236,7 @@ def plot_agglo_logit(Xps1, Yps1, nonmusic_subreddits):
     plt.tight_layout(pad=2, w_pad=5)
     # plt.suptitle("Feature agglomeration", size=22)
     plt.title("Model accuracy", size=22)
-    plt.xlabel("Number of hidden units", size=labelfontsize)
+    plt.xlabel("Number of agglomerated features", size=labelfontsize)
     plt.ylabel("Correct predictions (%)", size=labelfontsize)
 
     plt.plot(n_groups_gen, agglo_1s, label="Agglomerated set",
@@ -263,7 +263,7 @@ def plot_agglo_logit(Xps1, Yps1, nonmusic_subreddits):
 
     fig.add_subplot(122)
     plt.title("Model instability", size=22)
-    plt.xlabel("Number of hidden units", size=labelfontsize)
+    plt.xlabel("Number of agglomerated features", size=labelfontsize)
     plt.ylabel("Mean parameter fluctuations", size=labelfontsize)
 
     mrmsds = []
