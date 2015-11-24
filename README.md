@@ -89,13 +89,23 @@ Models were trained at 10-unit intervals. The RBM models fail to reach accuracy 
 
 Unlike the feature agglomeration model, the model is least stable at low N, and becomes increasingly stable as N grows. This may be because the RBM models' hidden units can receive input with the same sign (positive or negative) from predictors with opposing correlations with the outcome, leading to a great deal of noise in training on sparse data. If this is correct, the fall in fluctuations could come from this scenario becoming less likely as N rises.
 
+### Summary
+
+Each model transformed the features and then used logistic regression. This graph summarises the prediction accuracy achieved through each approach.
+
+Model | Peak accuracy | Parameters at peak performance
+----- | ------------- | -----
+Excluding sparsest predictors | 66.9% | Top 45% densest features included
+Feature agglomeration | __67.4%__ | 105 agglomerated features
+Restricted Boltzmann Machines | 66.1% | 130 hidden units
+
 ## Conclusions
 
 The output of the selected models is compatible with the expectation of a low ceiling on prediction accuracy; no model reached 68% accuracy on the full dataset.
 
 The peak accuracy of the feature agglomeration method was greater than for the simple linear regression approach. This demonstrates that, rather than disregarding the most sparse predictors due to the variance they introduce, predictors can be simply grouped to create a lower-complexity model which retains some of the predictive power of the most sparse features.
 
-The RBM model approach was not competitive with the other approaches, and it was suggested that this is because the learned features were far from optimally discriminative on the classification problem. This motivates the need for [Discriminative RBMs](http://machinelearning.org/archive/icml2008/papers/601.pdf), which ensure that the learned features are discriminative.
+The RBM model approach was not competitive with the other approaches in the range tested, and it was suggested that this is because the learned features were far from optimally discriminative on the classification problem. This motivates the need for [Discriminative RBMs](http://machinelearning.org/archive/icml2008/papers/601.pdf), which ensure that the learned features are discriminative.
 
 ## Bonus graph
 
