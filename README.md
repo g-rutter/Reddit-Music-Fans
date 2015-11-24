@@ -53,7 +53,7 @@ The features are:
 
 The graph below shows how classification success with the standard logistic regression algorithm varies as increasingly sparse predictors are introduced. Note that the secondary Y-axis is truncated. The algorithm makes no accuracy gains past the first 40% most popular subreddits, despite the fact that about 5% of fans don't post in these. It is unlikely that the latter 60% of subreddits provide no information. Instead, model bias is likely being traded off for variance, as the less important features increase the model complexity.
 
-<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/master/README_figs/plot_sparsity.svg" /></p>
+<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/01ce84832d6306dcfbf134c656a4b82f81384b08/README_figs/plot_sparsity.svg" /></p>
 
 These observations, and the intuition that many of these features should have extremely similar behaviour in the limit of a very large number of samples, suggest that grouping features through a [latent variable model](https://en.wikipedia.org/wiki/Latent_variable_model) should be possible with minimal loss of information.
 
@@ -75,7 +75,7 @@ Below, prediction accuracy and model stability are shown as a function of N, the
 
 ### Feature agglomeration
 
-<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/6b83a805cc5f34b385eb3719a2913b1edcb79cdd/README_figs/agglo_logit.svg" /></p>
+<p align="center"><img src ="https://cdn.rawgit.com/g-rutter/Reddit-Music-Fans/8f0d198ebf032f475622beefa50269debbdf20a6/README_figs/agglo_logit.svg" /></p>
 
 Here, the benchmark performance is identically equal to agglomeration with N = 2000. The scheme reaches parity with standard logistic regression at just N = 15, and overtakes at larger N. Agglomeration incurs information loss, but protects the model from over-training on the outliers in the training set. The best balance between these two effects is either the peak at N = 100, or in the range 140 < N < 2000.
 
@@ -87,7 +87,15 @@ The accuracy here lags behind the standard logistic model, but makes gains as N 
 
 Models were trained at 10-unit intervals. The RBM models fail to reach accuracy parity with logistic regression on the original dataset, in the range studied. This shows that the hidden units, trained to minimally represent the 2000-predictor input data, do not effectively capture properties which discriminate the two classes. In other words, there are stronger patterns in the data than those which separate the classes. In such a case, unlabelled dimensionality-reduction preprocessing is not useful.
 
-Unlike the feature agglomeration model, the model is least stable at low N, and becomes increasingly stable as N grows. This may be because the RBM models' hidden units can receive input with the same sign (positive or negative) from predictors with opposing correlations with the outcome, leading to a great deal of noise in training on each data subset. If this is correct, the fall in fluctuations could come from this scenario becoming less likely as N rises.
+Unlike the feature agglomeration model, the model is least stable at low N, and becomes increasingly stable as N grows. This may be because the RBM models' hidden units can receive input with the same sign (positive or negative) from predictors with opposing correlations with the outcome, leading to a great deal of noise in training on sparse data. If this is correct, the fall in fluctuations could come from this scenario becoming less likely as N rises.
+
+## Conclusions
+
+The output of the selected models is compatible with the expectation of a low ceiling on prediction accuracy; no model reached 68% accuracy on the full dataset.
+
+The peak accuracy of the feature agglomeration method was greater than for the simple linear regression approach. This demonstrates that, rather than disregarding the most sparse predictors due to the variance they introduce, predictors can be simply grouped to create a lower-complexity model which retains some of the predictive power of the most sparse features.
+
+The RBM model approach was not competitive with the other approaches, and it was suggested that this is because the learned features were far from optimally discriminative on the classification problem. This motivates the need for [Discriminative RBMs](http://machinelearning.org/archive/icml2008/papers/601.pdf), which ensure that the learned features are discriminative.
 
 ## Bonus graph
 
