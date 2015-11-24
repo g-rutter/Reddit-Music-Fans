@@ -91,11 +91,11 @@ Unlike the feature agglomeration model, the model is least stable at low N, and 
 
 ### Summary
 
-Each model transformed the features and then used logistic regression. This graph summarises the prediction accuracy achieved through each approach.
+Each model transformed the features and then used logistic regression. This graph summarises the prediction accuracy achieved through each approach to feature transformation.
 
-Model | Peak accuracy | Parameters at peak performance
+Model | Peak accuracy | Parameters at peak
 ----- | ------------- | -----
-Excluding sparsest predictors | 66.9% | Top 45% densest features included
+Exclusion of the sparsest predictors | 66.9% | 55% of features excluded
 Feature agglomeration | __67.4%__ | 105 agglomerated features
 Restricted Boltzmann Machines | 66.1% | 130 hidden units
 
