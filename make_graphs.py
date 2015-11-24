@@ -174,7 +174,7 @@ def plot_sparsity(Xps1, Yps1):
     par1.plot(x2, logit_scores, label="Logit", color=snscol[1],
               linewidth=linewidth)
 
-    par1.set_ylim(50, 75)
+    par1.set_ylim(60, 70)
 
     # host.legend()
 
