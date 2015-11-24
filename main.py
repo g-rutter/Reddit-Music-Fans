@@ -67,24 +67,16 @@ if __name__ == "__main__":
     (Xps1, Yps1) = balance_data(Xps1, Yps1)
     # (Xps20, Yps20) = balance_data(Xps20, Yps20)
 
-    ################################
-    #  BRBM learning rate trainer  #
-    ################################
-
-    # print "Training BRBM"
-
-    # train_BRBMs(Xps1, Yps1, Xps20, Yps20)
-
     ###########
     #  Plots  #
     ###########
 
-    # plot_LDA_histogram(Xps1, Xps20, Yps1, Yps20)
+    plot_LDA_histogram(Xps1, Xps20, Yps1, Yps20)
 
-    # plot_sparsity(Xps1, Yps1)
+    plot_sparsity(Xps1, Yps1)
 
     plot_agglo_logit(Xps1, Yps1, nonmusic_subreddits)
 
     plot_RBM(Xps1, Yps1)
 
-    # graph_music_taste(Xps1, Yps1, nonmusic_subreddits)
+    graph_music_taste(Xps1, Yps1, nonmusic_subreddits)
