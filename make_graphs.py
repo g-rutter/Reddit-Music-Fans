@@ -22,6 +22,7 @@ from itertools import combinations
 
 from manipulate_data import balance_data, prune_sparse_samples, phi_agglomerate
 
+
 def plot_LDA_histogram(Xps1, Xps20, Yps1, Yps20):
     ''' Produce README_figs/LDA_20vs1.svg
 
@@ -63,7 +64,8 @@ def plot_LDA_histogram(Xps1, Xps20, Yps1, Yps20):
 
     plt.figure(figsize=(8, 4.5))
     plt.subplot(1, 1, 1)
-    plt.suptitle("Projection of samples along the linear discriminant", size=16)
+    plt.suptitle(
+        "Projection of samples along the linear discriminant", size=16)
     plt.xlabel("Linear discriminant value", size=labelfontsize)
     plt.ylabel("Probability density", size=labelfontsize)
 
@@ -71,21 +73,22 @@ def plot_LDA_histogram(Xps1, Xps20, Yps1, Yps20):
 
     i = 0
     plt.hist(X_r1[Yps1 == i], normed=True, bins=bins, histtype='step',
-            color=snscol[i], label=labels[i], linewidth=linewidth)
+             color=snscol[i], label=labels[i], linewidth=linewidth)
     i = 1
     plt.hist(X_r1[Yps1 == i], normed=True, bins=bins, histtype='step',
              color=snscol[i], label=labels[i], linewidth=linewidth)
     i = 0
     plt.hist(X_r20[Yps20 == i], normed=True, bins=bins, histtype='step',
-             color=snscol[i], label=labels[i]+u' (≥20 subreddits)',
+             color=snscol[i], label=labels[i] + u' (≥20 subreddits)',
              linestyle=('dashed'), linewidth=linewidth)
     i = 1
     plt.hist(X_r20[Yps20 == i], normed=True, bins=bins, histtype='step',
-             color=snscol[i], label=labels[i]+u' (≥20 subreddits)',
+             color=snscol[i], label=labels[i] + u' (≥20 subreddits)',
              linestyle=('dashed'), linewidth=linewidth)
 
     plt.legend(fontsize=11)
     plt.savefig("README_figs/LDA_20vs1.svg")
+
 
 def plot_sparsity(Xps1, Yps1):
     ''' Produce README_figs/plot_sparsity.xvg
@@ -124,13 +127,13 @@ def plot_sparsity(Xps1, Yps1):
 
         for i in range(1, n_features):
 
-            progress = float(100*i)/n_features
+            progress = float(100 * i) / n_features
             x1.append(progress)
 
             # Cumulative users
             feature_posters = ordered_Xps1[:, i]
             seen_posters = np.logical_or(seen_posters, feature_posters)
-            cum_posters.append(100.0*seen_posters.sum()/n_samples)
+            cum_posters.append(100.0 * seen_posters.sum() / n_samples)
 
             # Classification accuracy
             if i % 4 == 0:
@@ -140,10 +143,10 @@ def plot_sparsity(Xps1, Yps1):
 
                 for train, test in kf:
                     logit_score += LogisticRegression()\
-                                    .fit(ordered_Xps1[train, :i], Yps1[train])\
-                                    .score(ordered_Xps1[test, :i], Yps1[test])
+                        .fit(ordered_Xps1[train, :i], Yps1[train])\
+                        .score(ordered_Xps1[test, :i], Yps1[test])
 
-                logit_scores.append(100.0*logit_score/4)
+                logit_scores.append(100.0 * logit_score / 4)
 
         topickle = (x1, cum_posters, x2, logit_scores)
 
@@ -188,6 +191,7 @@ def plot_sparsity(Xps1, Yps1):
     plt.draw()
     plt.savefig("README_figs/plot_sparsity.svg")
 
+
 def plot_agglo_logit(Xps1, Yps1, nonmusic_subreddits):
     ''' Creates file README_figs/agglo_logit.svg by training logit regression
         to work with various sizes of predictor groups and measuring model
@@ -217,7 +221,7 @@ def plot_agglo_logit(Xps1, Yps1, nonmusic_subreddits):
             pickle.dump(topickle, data_f)
 
         (n_lo, n_hi, logit_1, logit_20, n_groups_gen,
-                agglo_1s, agglo_20s, params, logit_params) = topickle
+         agglo_1s, agglo_20s, params, logit_params) = topickle
 
     ############################################
     #  Plot - subplot 1 - prediction accuracy  #
@@ -269,13 +273,13 @@ def plot_agglo_logit(Xps1, Yps1, nonmusic_subreddits):
     mrmsds = []
     n_groups = []
 
-    #var params is structured as:
-    #params[k][j[i] = the ith model parameter of the jth model (jth fold in the
+    # var params is structured as:
+    # params[k][j[i] = the ith model parameter of the jth model (jth fold in the
     #                 cross-validation) in the kth number of predictor groups
     for k, param_sets in enumerate(params):
         mrmsd = get_mrmsd(param_sets)
         mrmsds.append(mrmsd)
-        n_groups.append(k+1)
+        n_groups.append(k + 1)
 
     mrmsd_logit = get_mrmsd(logit_params)
 
@@ -292,6 +296,7 @@ def plot_agglo_logit(Xps1, Yps1, nonmusic_subreddits):
 
     plt.savefig("README_figs/agglo_logit.svg")
 
+
 def get_mrmsd(param_sets):
     ''' Helper function for plot_agglo_logit(). Calculates mean rmsd values for
         parameter fluctuations.
@@ -300,7 +305,7 @@ def get_mrmsd(param_sets):
     n_params = len(param_sets[0][0])
     m_param_sets = len(param_sets)
 
-    #Get mean
+    # Get mean
     param_mean = [0.0 for _ in range(n_params)]
     for j in range(n_params):
         for i in range(m_param_sets):
@@ -308,7 +313,7 @@ def get_mrmsd(param_sets):
 
         param_mean[j] /= m_param_sets
 
-    #Get RMSD
+    # Get RMSD
     param_rmsd = [0.0 for _ in range(n_params)]
     mrmsd = 0.0
 
@@ -316,12 +321,13 @@ def get_mrmsd(param_sets):
         for i in range(m_param_sets):
             param_rmsd[j] += (param_sets[i][0][j] - param_mean[j])**2
 
-        param_rmsd[j] = np.sqrt(param_rmsd[j]/m_param_sets)
+        param_rmsd[j] = np.sqrt(param_rmsd[j] / m_param_sets)
 
     for j in range(n_params):
         mrmsd += param_rmsd[j]
-    mrmsd = mrmsd/n_params
+    mrmsd = mrmsd / n_params
     return mrmsd
+
 
 def agglo_logit_calc(Xps1, Yps1, nonmusic_subreddits):
     ''' Handles fitting and scoring of the agglomeration->logistic regression
@@ -343,7 +349,7 @@ def agglo_logit_calc(Xps1, Yps1, nonmusic_subreddits):
     n_lo = 1
     n_hi = 155
     step = 1
-    n_groups_gen = range(n_lo, n_hi+1, step)
+    n_groups_gen = range(n_lo, n_hi + 1, step)
 
     agglo_1s = [0.0 for _ in n_groups_gen]
     agglo_20s = [0.0 for _ in n_groups_gen]
@@ -357,13 +363,13 @@ def agglo_logit_calc(Xps1, Yps1, nonmusic_subreddits):
         logit.fit(Xps1[train], Yps1[train])
         logit_params.append(logit.coef_)
 
-        logit_1 += (100.0*logit.score(Xps1[test], Yps1[test]))
+        logit_1 += (100.0 * logit.score(Xps1[test], Yps1[test]))
 
         (Xps20_test, Yps20_test) = prune_sparse_samples(Xps1[test], Yps1[test],
                                                         threshold=20)
         (Xps20_test, Yps20_test) = balance_data(Xps20_test, Yps20_test)
 
-        logit_20 += (100.0*logit.score(Xps20_test, Yps20_test))
+        logit_20 += (100.0 * logit.score(Xps20_test, Yps20_test))
 
         for j, n_groups in enumerate(n_groups_gen):
 
@@ -376,14 +382,17 @@ def agglo_logit_calc(Xps1, Yps1, nonmusic_subreddits):
 
             params[j][i_fold] = logit.coef_
 
-            agglo_1s[j] += (100.0*logit.score(Xagglo_test_1, Yps1[test])/n_folds)
-            agglo_20s[j] += (100.0*logit.score(Xagglo_test_20, Yps20_test)/n_folds)
+            agglo_1s[j] += (100.0 * logit.score(Xagglo_test_1,
+                                                Yps1[test]) / n_folds)
+            agglo_20s[j] += (100.0 * logit.score(Xagglo_test_20,
+                                                Yps20_test) / n_folds)
 
     logit_1 /= n_folds
     logit_20 /= n_folds
 
     return (n_lo, n_hi, logit_1, logit_20, n_groups_gen, agglo_1s, agglo_20s,
             params, logit_params)
+
 
 def graph_music_taste(Xps1, Yps1, nonmusic_subreddits, n_groups=20,
                       node_cut=2000, edge_cut=0.15):
@@ -408,7 +417,7 @@ def graph_music_taste(Xps1, Yps1, nonmusic_subreddits, n_groups=20,
 
         Xps1 = Xps1.toarray()
         (Xps1_agglo, sub_group) = phi_agglomerate(N=n_groups).\
-                                            fit(Xps1, Yps1).transform(Xps1)
+            fit(Xps1, Yps1).transform(Xps1)
         coefs = LogisticRegression().fit(Xps1_agglo, Yps1).coef_[0]
         colors = get_color_rgba(coefs)
 
@@ -445,7 +454,7 @@ def graph_music_taste(Xps1, Yps1, nonmusic_subreddits, n_groups=20,
         for a, b in combinations(range(n_features), r=2):
             e = g.add_edge(verts[a], verts[b])
             connections[e] = n_connections[a][b]
-            group_av[e] = (sub_group[a]+sub_group[b])/2
+            group_av[e] = (sub_group[a] + sub_group[b]) / 2
             group_av_colour[e] = colors[group_av[e]]
 
         # Make all properties internal for pickling
@@ -482,12 +491,12 @@ def graph_music_taste(Xps1, Yps1, nonmusic_subreddits, n_groups=20,
     g.ep.line_thick_log = g.new_edge_property("float")
     edge_weight_threshold = g.new_edge_property("bool")
     for edge in g.edges():
-        g.ep.line_thickness[edge] = g.ep.connections[edge]*0.003
+        g.ep.line_thickness[edge] = g.ep.connections[edge] * 0.003
         # g.ep.line_thick_log[edge] = np.log(g.ep.connections[edge])
         a = edge.source()
         b = edge.target()
-        edge_weight = min(float(g.ep.connections[edge])/g.vp.sub_size[a],
-                          float(g.ep.connections[edge])/g.vp.sub_size[b])
+        edge_weight = min(float(g.ep.connections[edge]) / g.vp.sub_size[a],
+                          float(g.ep.connections[edge]) / g.vp.sub_size[b])
         edge_weight_threshold[edge] = edge_weight > edge_cut
     g.set_edge_filter(edge_weight_threshold)
 
@@ -510,6 +519,7 @@ def graph_music_taste(Xps1, Yps1, nonmusic_subreddits, n_groups=20,
                edge_pen_width=g.edge_properties.line_thickness,
                edge_color=g.edge_properties.group_color)
 
+
 def get_color_rgba(values, colormap=cm.bwr):
     ''' Maps a numpy.array of floats along a colour map, so that 0.0 maps to
         colormap's centre and the value furthest from 0.0 (+ or -) is mapped
@@ -521,16 +531,17 @@ def get_color_rgba(values, colormap=cm.bwr):
     except AttributeError:
         pass
 
-    N = 256.0 # colors encoded into the colormap
+    N = 256.0  # colors encoded into the colormap
 
     magnitude = max(max(values), -min(values))
-    mappings = (values*N)/(2*magnitude) + (N/2)
+    mappings = (values * N) / (2 * magnitude) + (N / 2)
 
     rgbas = []
     for mapping in mappings.astype(int):
         rgbas.append(colormap(mapping))
 
     return rgbas
+
 
 def get_BRBMs(Xps1, Yps1, N_range, rand, n_folds):
     ''' Trains a set of BRBMs on the dataset and saves as pickles.
@@ -548,7 +559,7 @@ def get_BRBMs(Xps1, Yps1, N_range, rand, n_folds):
     #  Train  #
     ###########
 
-    #Unpruned samples first (Xps1, Yps1)
+    # Unpruned samples first (Xps1, Yps1)
     (n_samples_1, n_features) = Xps1.shape
     kf = KFold(n_samples_1, n_folds=n_folds, shuffle=True, random_state=rand)
     BRBMs = np.empty([len(N_range), n_folds], dtype=object)
@@ -556,7 +567,7 @@ def get_BRBMs(Xps1, Yps1, N_range, rand, n_folds):
     for i, N in enumerate(N_range):
         for j, (train, test) in enumerate(kf):
 
-            filename = "pickles/BRBMs/N"+str(N)+"_f"+str(j)+".pickle"
+            filename = "pickles/BRBMs/N" + str(N) + "_f" + str(j) + ".pickle"
             try:
                 with open(filename, 'r') as data_f:
                     BRBMs[i][j] = pickle.load(data_f)
@@ -574,6 +585,7 @@ def get_BRBMs(Xps1, Yps1, N_range, rand, n_folds):
 
     return BRBMs
 
+
 def plot_RBM(Xps1, Yps1):
     ''' Produce a plot of RBM classification accuracy and model variation
     '''
@@ -585,7 +597,7 @@ def plot_RBM(Xps1, Yps1):
     n_lo = 10
     n_hi = 140
 
-    N_range = range(n_lo, n_hi+1, 10)
+    N_range = range(n_lo, n_hi + 1, 10)
     rand = 0
     n_folds = 4
     BRBMs = get_BRBMs(Xps1, Yps1, N_range, rand, n_folds)
@@ -623,15 +635,17 @@ def plot_RBM(Xps1, Yps1):
             params[i][j_fold] = logit.coef_
 
             Xps1_test_trans = rbm.transform(Xps1[test])
-            logit_score[i] += 100.0*logit.score(Xps1_test_trans, Yps1[test])/n_folds
+            logit_score[i] += 100.0 * \
+                logit.score(Xps1_test_trans, Yps1[test]) / n_folds
 
             Xps20_test_trans = rbm.transform(Xps20_test)
-            logit_score_20[i] += 100.0*logit.score(Xps20_test_trans, Yps20_test)/n_folds
+            logit_score_20[i] += 100.0 * \
+                logit.score(Xps20_test_trans, Yps20_test) / n_folds
 
         logit.fit(Xps1[train], Yps1[train])
         logit_params.append(logit.coef_)
-        logit_1 += (100.0*logit.score(Xps1[test], Yps1[test]))/n_folds
-        logit_20 += (100.0*logit.score(Xps20_test, Yps20_test))/n_folds
+        logit_1 += (100.0 * logit.score(Xps1[test], Yps1[test])) / n_folds
+        logit_20 += (100.0 * logit.score(Xps20_test, Yps20_test)) / n_folds
 
     ############################################
     #  Plot - subplot 1 - prediction accuracy  #
@@ -680,8 +694,8 @@ def plot_RBM(Xps1, Yps1):
 
     mrmsds = []
 
-    #var params is structured as:
-    #params[k][j[i] = the ith model parameter of the jth model (jth fold in the
+    # var params is structured as:
+    # params[k][j[i] = the ith model parameter of the jth model (jth fold in the
     #                 cross-validation) in the kth number of predictor groups
     for k, param_sets in enumerate(params):
         mrmsd = get_mrmsd(param_sets)

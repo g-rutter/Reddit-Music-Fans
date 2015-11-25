@@ -10,9 +10,9 @@ to music they posted on. Uses the May2015 Reddit comments, from Kaggle.
 from get_dataset_SQL import get_dataset_SQL
 from subreddits import subreddit_genres, genres, music_subreddits
 from manipulate_data import sanitise_predictors, balance_data, kill_outcome,\
-                            prune_sparse_samples
+    prune_sparse_samples
 from make_graphs import plot_LDA_histogram, plot_sparsity, plot_agglo_logit,\
-                        plot_RBM, graph_music_taste
+    plot_RBM, graph_music_taste
 
 import pickle
 from numpy import array
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         table_name = "May2015"
         (X, Y, nonmusic_subreddits) = get_dataset_SQL(db_file, table_name)
 
-        print "Checkpointing: Saving pickle of output as "+XY_pickle
+        print "Checkpointing: Saving pickle of output as " + XY_pickle
         with open(XY_pickle, 'w') as dataset_file:
             pickle.dump((X, Y, nonmusic_subreddits), dataset_file)
 

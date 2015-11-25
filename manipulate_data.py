@@ -11,6 +11,7 @@ import sklearn as sk
 from scipy.stats import pearsonr
 from scipy.sparse import csr_matrix, coo_matrix
 
+
 class phi_agglomerate(object):
     ''' Class which implements simple feature agglomeration in the sklearn
         style, where there are fit and transform methods which can be chained.
@@ -84,6 +85,7 @@ class phi_agglomerate(object):
 
         return X_new, predictor_group
 
+
 def input_shuffle_split(X, Y, train=0.8):
     ''' Split input data into training and testing data
         WARNING: Once Y is shuffled, several preprocessing functions will no
@@ -106,14 +108,16 @@ def input_shuffle_split(X, Y, train=0.8):
     for outcome_pop in count_contiguous_blocks(Y, n_outcomes):
         upper = outcome_pop + lower
 
-        n_training_samples = int(outcome_pop*train)
-        keep = sk.utils.shuffle(range(lower, upper), random_state=0)[:n_training_samples]
+        n_training_samples = int(outcome_pop * train)
+        keep = sk.utils.shuffle(range(lower, upper), random_state=0)[
+            :n_training_samples]
         training_mask[keep] = True
 
         lower = upper
 
     return (X[training_mask], Y[training_mask],
             X[training_mask == False], Y[training_mask == False])
+
 
 def prune_sparse_samples(X, Y, threshold=1, silent=False):
     ''' Remove samples who posted on less than 'threshold' offtopic subreddits
@@ -147,9 +151,10 @@ def prune_sparse_samples(X, Y, threshold=1, silent=False):
 
     if not silent:
         print "{0:.2f}% of {1:d} samples pruned (threshold {2:d})"\
-            .format((100.0*len(delete))/n_samples, n_samples, threshold)
+            .format((100.0 * len(delete)) / n_samples, n_samples, threshold)
 
     return X[mask], Y[mask]
+
 
 def prune_sparse_predictors(X, predictor_labels, threshold=10):
     ''' Remove predictors with fewer than 'threshold' nonzero samples. '''
@@ -173,9 +178,10 @@ def prune_sparse_predictors(X, predictor_labels, threshold=10):
     mask[delete] = False
 
     print "{0:.2f}% of {1:d} predictors pruned (threshold {2:d})"\
-        .format((100.0*len(delete))/n_predictors, n_predictors, threshold)
+        .format((100.0 * len(delete)) / n_predictors, n_predictors, threshold)
 
     return X[:, mask], predictor_labels[mask]
+
 
 def balance_data(X, Y):
     ''' Finds least common outcome i and randomly removes other outcomes'
@@ -200,25 +206,29 @@ def balance_data(X, Y):
         upper = outcome_pops[i] + lower
 
         # Select min_outcome_pop entries on [lower, upper) to keep.
-        keep = sk.utils.shuffle(range(lower, upper), random_state=0)[:min_outcome_pop]
-        #np.array of values from np.random
+        keep = sk.utils.shuffle(range(lower, upper), random_state=0)[
+            :min_outcome_pop]
+        # np.array of values from np.random
         mask[keep] = True
 
         lower = upper
 
     return X[mask], Y[mask]
 
+
 def count_contiguous_blocks(A, n):
     ''' For a sorted array of blocks of ints from 0 to n-1,
         return generator of block length for each int.
     '''
 
-    # Slide along sorted array once in O(n) time, yielding length of each number's segment
+    # Slide along sorted array once in O(n) time, yielding length of each
+    # number's segment
     block_start = 0
     for i in range(n):
         block_length = bisect.bisect(A[block_start:], i)
         block_start += block_length
         yield block_length
+
 
 def summarise_dataset(X, Y, outcomes=None):
     ''' Output simple summary of X, Y, outcomes dataset '''
@@ -231,7 +241,7 @@ def summarise_dataset(X, Y, outcomes=None):
     nnz = X.getnnz()
 
     print "{0:d} samples\n{1:d} predictors\n{2:.3f}% density\n"\
-        .format(n_samples, n_predictors, 100.0*nnz/(n_samples*n_predictors))
+        .format(n_samples, n_predictors, 100.0 * nnz / (n_samples * n_predictors))
 
     print "{0:d} outcomes:".format(n_outcomes)
     for i, block_length in enumerate(count_contiguous_blocks(Y, n_outcomes)):
@@ -239,9 +249,10 @@ def summarise_dataset(X, Y, outcomes=None):
             print " {0:7d} samples of outcome {1}".format(block_length, i)
         else:
             print " {0:7d} samples of \"{1:s}\"".\
-                                            format(block_length, outcomes[i])
+                format(block_length, outcomes[i])
 
     print "--------------------------------------------"
+
 
 def kill_outcome(X, Y, outcomes, outcome):
     ''' Remove an outcome, provided as a string, from the dataset X, Y.
@@ -264,6 +275,7 @@ def kill_outcome(X, Y, outcomes, outcome):
 
     return X[mask], Y[mask], tuple(outcomes)
 
+
 def sanitise_predictors(X, predictor_labels, targets):
     ''' 1) Remove a list 'targets' of predictors given by their
            labels from the columns of X and from predictor_labels.
@@ -285,6 +297,7 @@ def sanitise_predictors(X, predictor_labels, targets):
           "excluded or empty."
 
     return X[:, mask], predictor_labels[mask]
+
 
 def prune_high_p(X, Y, predictors, pmax=0.05):
     ''' Remove predictors which do not correlate with an outcome with a
